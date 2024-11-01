@@ -1,0 +1,6 @@
+@IeltsTestWeb_HostAddress = http://localhost:5254
+
+GET {{IeltsTestWeb_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
