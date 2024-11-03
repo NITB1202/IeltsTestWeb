@@ -5,8 +5,7 @@ namespace IeltsTestWeb.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class UserController : ControllerBase
+    public class AccountController : ControllerBase
     {
-
     }
 }
