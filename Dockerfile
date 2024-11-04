@@ -18,6 +18,8 @@ COPY . /source
 
 WORKDIR /source/IeltsTestWeb
 
+EXPOSE 80
+
 # This is the architecture you’re building for, which is passed in by the builder.
 # Placing it here allows the previous steps to be cached across architectures.
 ARG TARGETARCH

@@ -15,9 +15,11 @@ services:
       context: .
       target: final
     environment:
-      DB_HOST: database
+      DB_HOST: database,
+      REDIS_HOST: redis,
+      ASPNETCORE_URLS: http://+:80
     ports:
-      - 8080:8080
+      - 8080:80
     networks:
       - ielts-network
 

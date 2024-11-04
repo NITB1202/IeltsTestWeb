@@ -14,14 +14,15 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
-// Add Redis connection
-var redis = ConnectionMultiplexer.Connect("localhost:6379");
-builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
-
 // Add database connection
 var defaultConnection = builder.Configuration.GetConnectionString("defaultConnection");
 var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
 var connectionString = dbHost.Equals("localhost") ? defaultConnection : defaultConnection.Replace("localhost", dbHost);
+
+// Add Redis connection
+var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
+var redis = ConnectionMultiplexer.Connect(redisHost+":6379");
+builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
 
 builder.Services.AddDbContext<ieltsDbContext>(options =>
     options.UseMySql(
@@ -84,7 +85,7 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();

@@ -25,14 +25,13 @@ namespace IeltsTestWeb.Controllers
         private readonly ieltsDbContext database;
         private readonly IConfiguration configuration;
         private readonly IConnectionMultiplexer redis;
+        private int verifyMinute { get; set; } = 5;
         public AccountController(ieltsDbContext database, IConfiguration configuration, IConnectionMultiplexer redis)
         {
             this.database = database;
             this.configuration = configuration;
             this.redis = redis;
         }
-
-        private int verifyMinute { get; set; } = 5;
 
         [HttpGet("AllRoles")]
         public async Task<ActionResult<IEnumerable<Models.Role>>> GetAllRoles()
@@ -140,7 +139,7 @@ namespace IeltsTestWeb.Controllers
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
 
-                return Ok("Verification code:" + verificationCode);
+                return Ok("Verification code: " + verificationCode);
             }
             catch (Exception ex)
             {
@@ -170,6 +169,23 @@ namespace IeltsTestWeb.Controllers
             database.Accounts.Add(account);
             await database.SaveChangesAsync();
             return Ok(account);
+        }
+
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromHeader] string newPassword,[FromBody] LoginRequestModel request)
+        {
+            var updatedAccount = await database.Accounts.SingleOrDefaultAsync(ac => ac.Email.Equals(request.Email));
+
+            if(updatedAccount!= null && BCrypt.Net.BCrypt.Verify(request.Password,updatedAccount.Password))
+            {
+                var hashPd = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                updatedAccount.Password = hashPd;
+                database.Update(updatedAccount);
+                await database.SaveChangesAsync();
+                return Ok("Password changes to: "+newPassword);
+            }
+
+            return NotFound("Can't find account.");
         }
     }
 }
