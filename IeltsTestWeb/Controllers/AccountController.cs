@@ -83,11 +83,11 @@ namespace IeltsTestWeb.Controllers
             return Ok(responseList);
         }
 
-        //[HttpPatch("UpdateProfileImage/{id}")]
-        //public async Task<ActionResult<string>> UpdateProfileImage(int id, [FromBody] string img)
-        //{
-        //    return Ok();
-        //}
+        [HttpPatch("UpdateProfileImage/{id}")]
+        public async Task<ActionResult<string>> UpdateProfileImage(int id, [FromBody] string img)
+        {
+            return Ok();
+        }
 
 
     }
