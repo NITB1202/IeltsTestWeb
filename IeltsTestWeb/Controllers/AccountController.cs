@@ -19,13 +19,9 @@ namespace IeltsTestWeb.Controllers
     public class AccountController : ControllerBase
     {
         private readonly ieltsDbContext database;
-        private readonly string imageUploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Avatars");
         public AccountController(ieltsDbContext database)
         {
             this.database = database;
-
-            //Ensure the directory exist
-            Directory.CreateDirectory(imageUploadPath);
         }
         private AccountResponseModel AccountToResponseModel(Account account)
         {
@@ -100,68 +96,39 @@ namespace IeltsTestWeb.Controllers
             await database.SaveChangesAsync();
             return Ok("Deactivate account successfully!");
         }
-        
-        //[HttpPost("UpdateProfileImage/{id}")]
-        //public async Task<IActionResult> UpdateProfileImage(int id, IFormFile file)
-        //{
-        //    if (file == null || file.Length == 0)
-        //        return BadRequest("No file uploaded.");
 
-        //    var account = await database.Accounts.FindAsync(id);
-        //    if (account == null)
-        //        return NotFound("Can't find account with id " + id);
+        [HttpPost("UpdateProfileImage/{id}")]
+        public async Task<IActionResult> UpdateProfileImage(int id, IFormFile file)
+        {
+            var account = await database.Accounts.FindAsync(id);
 
-        //    var fileName = Path.GetFileNameWithoutExtension(file.FileName);
-        //    var extension = Path.GetExtension(file.FileName).ToLower();
-        //    var savedFilePath = Path.Combine(imageUploadPath, fileName + extension);
+            if (account == null)
+                return NotFound("Can't find account with id " + id);
 
-        //    if (extension != ".jpg" && extension != ".jpeg" && extension != ".png")
-        //        return BadRequest("Invalid file type. Only JPG, JPEG, PNG are allowed.");
+            if (!ResourcesManager.IsImageValid(file))
+                return BadRequest("Invalid image file");
 
-        //    // Delete old image
-        //    if (!string.IsNullOrEmpty(account.AvatarLink) && System.IO.File.Exists(account.AvatarLink))
-        //        System.IO.File.Delete(account.AvatarLink);
+            // Delete old image
+            ResourcesManager.RemoveImage(account.AvatarLink);
 
-        //    // Đặt tên tệp và đường dẫn
-        //    var fileExtension = Path.GetExtension(avatar.FileName);
-        //    var fileName = $"avatar_{id}{fileExtension}";
-        //    var filePath = Path.Combine("uploads", "avatars", fileName);
+            // Ensure create avatars directory
+            Directory.CreateDirectory(ResourcesManager.avatarsDir);
 
-        //    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            // Create file path
+            var fileExtension = Path.GetExtension(file.FileName);
+            var fileName = $"avatar_{id}{fileExtension}";
+            var filePath = Path.Combine(ResourcesManager.avatarsDir,fileName);
 
-        //    // Tối ưu hóa và lưu ảnh mới
-        //    using (var image = Image.Load(avatar.OpenReadStream()))
-        //    {
-        //        // Giảm kích thước ảnh nếu lớn hơn 500x500
-        //        int maxWidth = 500;
-        //        int maxHeight = 500;
+            // Save image
+            await ResourcesManager.SaveImage(file, filePath);
 
-        //        if (image.Width > maxWidth || image.Height > maxHeight)
-        //        {
-        //            image.Mutate(x => x.Resize(new ResizeOptions
-        //            {
-        //                Mode = ResizeMode.Max,
-        //                Size = new Size(maxWidth, maxHeight)
-        //            }));
-        //        }
+            // Save image url
+            var relativePath = ResourcesManager.GetRelativePath(filePath);
+            account.AvatarLink = relativePath;
+            await database.SaveChangesAsync();
 
-        //        // Thiết lập chất lượng nén ảnh
-        //        var encoder = new JpegEncoder
-        //        {
-        //            Quality = 75 // Đặt chất lượng nén (1-100)
-        //        };
-
-        //        // Lưu ảnh đã tối ưu hóa
-        //        await image.SaveAsync(filePath, encoder);
-        //    }
-
-        //    // Cập nhật đường dẫn ảnh trong cơ sở dữ liệu và tạo URL
-        //    account.AvatarLink = $"/uploads/avatars/{fileName}";
-        //    await _context.SaveChangesAsync();
-
-        //    var avatarUrl = $"{Request.Scheme}://{Request.Host}{account.AvatarLink}";
-        //    return Ok(new { AvatarUrl = avatarUrl });
-        //}
-
+            var avatarUrl = $"{Request.Scheme}://{Request.Host}{account.AvatarLink}";
+            return Ok(new { AvatarUrl = avatarUrl });
+        }
     }
 }
