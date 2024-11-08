@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Ocsp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 
@@ -16,9 +19,13 @@ namespace IeltsTestWeb.Controllers
     public class AccountController : ControllerBase
     {
         private readonly ieltsDbContext database;
+        private readonly string imageUploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Avatars");
         public AccountController(ieltsDbContext database)
         {
             this.database = database;
+
+            //Ensure the directory exist
+            Directory.CreateDirectory(imageUploadPath);
         }
         private AccountResponseModel AccountToResponseModel(Account account)
         {
@@ -83,12 +90,78 @@ namespace IeltsTestWeb.Controllers
             return Ok(responseList);
         }
 
-        [HttpPatch("UpdateProfileImage/{id}")]
-        public async Task<ActionResult<string>> UpdateProfileImage(int id, [FromBody] string img)
+        [HttpPatch("DeactivateAccount/{id}")]
+        public async Task<IActionResult> DeactivateAccount(int id)
         {
-            return Ok();
+            var account = await database.Accounts.FindAsync(id);
+            if (account == null)
+                return NotFound("Can't find account with id " + id);
+            account.IsActive = false;
+            await database.SaveChangesAsync();
+            return Ok("Deactivate account successfully!");
         }
+        
+        //[HttpPost("UpdateProfileImage/{id}")]
+        //public async Task<IActionResult> UpdateProfileImage(int id, IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //        return BadRequest("No file uploaded.");
 
+        //    var account = await database.Accounts.FindAsync(id);
+        //    if (account == null)
+        //        return NotFound("Can't find account with id " + id);
+
+        //    var fileName = Path.GetFileNameWithoutExtension(file.FileName);
+        //    var extension = Path.GetExtension(file.FileName).ToLower();
+        //    var savedFilePath = Path.Combine(imageUploadPath, fileName + extension);
+
+        //    if (extension != ".jpg" && extension != ".jpeg" && extension != ".png")
+        //        return BadRequest("Invalid file type. Only JPG, JPEG, PNG are allowed.");
+
+        //    // Delete old image
+        //    if (!string.IsNullOrEmpty(account.AvatarLink) && System.IO.File.Exists(account.AvatarLink))
+        //        System.IO.File.Delete(account.AvatarLink);
+
+        //    // Đặt tên tệp và đường dẫn
+        //    var fileExtension = Path.GetExtension(avatar.FileName);
+        //    var fileName = $"avatar_{id}{fileExtension}";
+        //    var filePath = Path.Combine("uploads", "avatars", fileName);
+
+        //    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+        //    // Tối ưu hóa và lưu ảnh mới
+        //    using (var image = Image.Load(avatar.OpenReadStream()))
+        //    {
+        //        // Giảm kích thước ảnh nếu lớn hơn 500x500
+        //        int maxWidth = 500;
+        //        int maxHeight = 500;
+
+        //        if (image.Width > maxWidth || image.Height > maxHeight)
+        //        {
+        //            image.Mutate(x => x.Resize(new ResizeOptions
+        //            {
+        //                Mode = ResizeMode.Max,
+        //                Size = new Size(maxWidth, maxHeight)
+        //            }));
+        //        }
+
+        //        // Thiết lập chất lượng nén ảnh
+        //        var encoder = new JpegEncoder
+        //        {
+        //            Quality = 75 // Đặt chất lượng nén (1-100)
+        //        };
+
+        //        // Lưu ảnh đã tối ưu hóa
+        //        await image.SaveAsync(filePath, encoder);
+        //    }
+
+        //    // Cập nhật đường dẫn ảnh trong cơ sở dữ liệu và tạo URL
+        //    account.AvatarLink = $"/uploads/avatars/{fileName}";
+        //    await _context.SaveChangesAsync();
+
+        //    var avatarUrl = $"{Request.Scheme}://{Request.Host}{account.AvatarLink}";
+        //    return Ok(new { AvatarUrl = avatarUrl });
+        //}
 
     }
 }
