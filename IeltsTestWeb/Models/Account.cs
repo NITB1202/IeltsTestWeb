@@ -11,13 +11,13 @@ public partial class Account
 
     public string Password { get; set; } = null!;
 
-    public int? RoleId { get; set; }
+    public int RoleId { get; set; }
 
     public string? AvatarLink { get; set; }
 
     public decimal? Goal { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool IsActive { get; set; }
 
     public virtual ICollection<Result> Results { get; set; } = new List<Result>();
 
