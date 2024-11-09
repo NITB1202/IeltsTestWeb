@@ -10,7 +10,6 @@ namespace IeltsTestWeb.Controllers
         private static int maxHeight = 500;
         public static string uploadDir { get; } = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
         public static string avatarsDir { get; } = Path.Combine(uploadDir, "images", "avatars");
-
         public static bool IsImageValid(IFormFile file)
         {
             if (file == null || file.Length == 0)

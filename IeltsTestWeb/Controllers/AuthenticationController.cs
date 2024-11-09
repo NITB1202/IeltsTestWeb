@@ -16,6 +16,7 @@ using MailKit.Net.Smtp;
 using System.Security.Principal;
 using StackExchange.Redis;
 using Org.BouncyCastle.Asn1.Ocsp;
+using MimeKit.Tnef;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -39,6 +40,24 @@ namespace IeltsTestWeb.Controllers
         {
             var roleList = await database.Roles.ToListAsync();
             return Ok(roleList);
+        }
+
+        [HttpPatch("UpdateRole/{id}")]
+        public async Task<IActionResult> UpdateAccountRole(int id, [FromBody] int roleId)
+        {
+            var account = await database.Accounts.FindAsync(id);
+            
+            if (account == null)
+                return NotFound("Can't find account with id " + id);
+
+            if (database.Roles.Any(role => role.RoleId == roleId))
+            {
+                account.RoleId = roleId;
+                await database.SaveChangesAsync();
+                return Ok("Update account's role successfully");
+            }
+
+            return NotFound("Can't find role with id " + roleId);
         }
 
         [HttpPost("Login")]
