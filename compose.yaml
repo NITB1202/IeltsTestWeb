@@ -18,6 +18,8 @@ services:
       DB_HOST: database,
       REDIS_HOST: redis,
       ASPNETCORE_URLS: http://+:80
+    volumes:
+      - ./IeltsTestWeb/uploads:/app/uploads
     ports:
       - 8080:80
     networks:
