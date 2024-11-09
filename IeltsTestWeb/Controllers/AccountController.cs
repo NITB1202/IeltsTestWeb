@@ -112,7 +112,7 @@ namespace IeltsTestWeb.Controllers
                 return BadRequest("Invalid image file");
 
             // Delete old image
-            ResourcesManager.RemoveImage(account.AvatarLink);
+            ResourcesManager.RemoveFile(account.AvatarLink);
 
             // Ensure create avatars directory
             Directory.CreateDirectory(ResourcesManager.avatarsDir);

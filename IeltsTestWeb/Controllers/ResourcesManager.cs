@@ -11,6 +11,7 @@ namespace IeltsTestWeb.Controllers
         private static int maxHeight = 500;
         public static string uploadDir { get; } = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
         public static string avatarsDir { get; } = Path.Combine(uploadDir, "images", "avatars");
+        public static string soundsDir { get; } = Path.Combine(uploadDir, "sounds");
         public static bool IsImageValid(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -23,16 +24,26 @@ namespace IeltsTestWeb.Controllers
 
             return true;
         }
-        public static bool RemoveImage(string? url)
+        public static bool RemoveFile(string? url)
         {
             if (url == null) return false;
 
-            var filePath = Path.Combine(uploadDir, url.TrimStart('/'));
+            var dirPath = Path.GetDirectoryName(url);
+            if (dirPath == null) return false;
 
-            if (!System.IO.File.Exists(filePath)) return false;
+            var files = Directory.GetFiles(Directory.GetCurrentDirectory() + dirPath);
+            var fileName = Path.GetFileNameWithoutExtension(url);
+            
+            foreach(var file in files)
+            {
+                if(Path.GetFileNameWithoutExtension(file) == fileName)
+                {
+                    System.IO.File.Delete(file);
+                    return true;
+                }
+            }
 
-            System.IO.File.Delete(filePath);
-            return true;
+            return false;
         }
         public static async Task SaveImage(IFormFile file, string filePath)
         {
@@ -75,6 +86,13 @@ namespace IeltsTestWeb.Controllers
                 return false;
 
             return true;
+        }
+        public static async Task SaveSound(IFormFile file, string filePath) 
+        {
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
         }
     }
 }
