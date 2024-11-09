@@ -115,7 +115,7 @@ namespace IeltsTestWeb.Controllers
         }
 
         [HttpPost("SendVerificationCode")]
-        public async Task<IActionResult> SendVerificationCode(string email)
+        public async Task<IActionResult> SendVerificationCode([FromBody] string email)
         {
             // Generate verification code
             var verificationCode = new Random().Next(1000, 9999).ToString();

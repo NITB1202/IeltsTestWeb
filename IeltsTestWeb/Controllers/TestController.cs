@@ -1,0 +1,142 @@
+﻿using IeltsTestWeb.Models;
+using IeltsTestWeb.RequestModels;
+using IeltsTestWeb.ResponseModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Security.Principal;
+
+namespace IeltsTestWeb.Controllers
+{
+    [Route("[controller]")]
+    [ApiController]
+    public class TestController : ControllerBase
+    {
+        private readonly ieltsDbContext database;
+        public TestController(ieltsDbContext database)
+        {
+            this.database = database;
+        }
+        private async Task<bool> IsDupplicated(TestRequestModel model)
+        {
+            if (await database.Tests.AnyAsync(test =>
+                test.TestType == model.TestType &&
+                test.TestSkill == model.TestSkill &&
+                test.Name == model.Name &&
+                test.MonthEdition == model.MonthEdition &&
+                test.YearEdition == model.YearEdition
+            ))
+                return true;
+
+            return false;
+        }
+        private static TestResponseModel TestToResponseModel(Test model)
+        {
+            return new TestResponseModel
+            {
+                TestId = model.TestId,
+                TestType = model.TestType,
+                TestSkill = model.TestSkill,
+                Name = model.Name,
+                MonthEdition = model.MonthEdition,
+                YearEdition = model.YearEdition,
+                UserCompletedNum = model.UserCompletedNum
+            };
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<TestResponseModel>>> GetAllTests()
+        {
+            var tests = await database.Tests.ToListAsync();
+            var responseList = tests.Select(test => TestToResponseModel(test)).ToList();
+            return Ok(responseList);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<TestResponseModel>> FindTestById(int id)
+        {
+            var test = await database.Tests.FindAsync(id);
+
+            if (test == null)
+                return NotFound("Can't find test with id " + id);
+
+            return Ok(TestToResponseModel(test));
+        }
+
+        [HttpPost("Create")]
+        public async Task<ActionResult<TestResponseModel>> CreateNewTest([FromBody] TestRequestModel request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (await IsDupplicated(request))
+                return BadRequest("The test already exists");
+
+            var test = new Test
+            {
+                TestType = request.TestType,
+                TestSkill = request.TestSkill,
+                Name = request.Name,
+                MonthEdition = request.MonthEdition,
+                YearEdition = request.YearEdition
+            };
+
+            database.Tests.Add(test);
+            await database.SaveChangesAsync();
+            return Ok(TestToResponseModel(test));
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<TestResponseModel>> UpdateTest(int id, [FromBody] TestRequestModel request)
+        {
+            var test = await database.Tests.FindAsync(id);
+
+            if (test == null)
+                return NotFound("Can't find test with id " + id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (await IsDupplicated(request))
+                return BadRequest("The specific test already exists. Please change the updated value.");
+
+            var requestProperties = typeof(TestRequestModel).GetProperties();
+            var testProperties = typeof(Test).GetProperties();
+
+            foreach (var prop in requestProperties)
+            {
+                var requestValue = prop.GetValue(request);
+
+                // If the value is not null, find corresponding property in test sample and update
+                if (requestValue != null)
+                {
+                    var testProp = testProperties.FirstOrDefault(p => p.Name == prop.Name);
+                    if (testProp != null && testProp.CanWrite)
+                        testProp.SetValue(test, requestValue);
+                }
+            }
+
+            await database.SaveChangesAsync();
+
+            return Ok(TestToResponseModel(test));
+        }
+
+        [HttpGet("FindMatch")]
+        public ActionResult<IEnumerable<TestResponseModel>> FindTestsMatch(
+            [FromQuery] string? name, [FromQuery] string? testType, [FromQuery] string? testSkill,
+            [FromQuery] int? monthEdition, [FromQuery] int? yearEdition)
+        {
+            var tests = database.Tests.Where(test =>
+                (name == null || test.Name.ToLower().StartsWith(name.ToLower())) &&
+                (testType == null || testType == test.TestType) &&
+                (testSkill == null || testSkill == test.TestSkill) &&
+                (monthEdition == null || monthEdition == test.MonthEdition) &&
+                (yearEdition == null || yearEdition == test.YearEdition)
+            );
+
+            var responseList = tests.Select(test => TestToResponseModel(test));
+
+            return Ok(responseList);
+        }
+    }
+}

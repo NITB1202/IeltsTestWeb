@@ -9,6 +9,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 
@@ -23,7 +24,7 @@ namespace IeltsTestWeb.Controllers
         {
             this.database = database;
         }
-        private AccountResponseModel AccountToResponseModel(Account account)
+        private static AccountResponseModel AccountToResponseModel(Account account)
         {
             return new AccountResponseModel
             {
@@ -31,11 +32,12 @@ namespace IeltsTestWeb.Controllers
                 Email = account.Email,
                 RoleId = account.RoleId,
                 AvatarLink = account.AvatarLink,
+                Goal = account.Goal,
                 IsActive = account.IsActive
             };
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<AccountResponseModel>>> GetAllAcounts()
         {
             var accounts = await database.Accounts.ToListAsync();
@@ -44,7 +46,7 @@ namespace IeltsTestWeb.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<ActionResult<AccountRequestModel>> CreateNewAccount([FromBody] AccountRequestModel request)
+        public async Task<ActionResult<AccountResponseModel>> CreateNewAccount([FromBody] AccountRequestModel request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -60,11 +62,11 @@ namespace IeltsTestWeb.Controllers
 
             database.Accounts.Add(account);
             await database.SaveChangesAsync();
-            return Ok(account);
+            return Ok(AccountToResponseModel(account));
         }
         
-        [HttpGet("FindById")]
-        public async Task<ActionResult<AccountResponseModel>> FindAccountById([FromHeader] int id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AccountResponseModel>> FindAccountById(int id)
         {
             var account = await database.Accounts.FindAsync(id);
 
@@ -75,12 +77,13 @@ namespace IeltsTestWeb.Controllers
         }
 
         [HttpGet("FindMatch")]
-        public ActionResult<IEnumerable<AccountResponseModel>> FindAccountsMatch([FromBody] QueryAccountRequestModel request)
+        public ActionResult<IEnumerable<AccountResponseModel>> FindAccountsMatch(
+            [FromQuery] string? email, [FromQuery] int? roleId, [FromQuery] bool? isActive)
         {
             var accounts = database.Accounts.Where(account =>
-                (request.Email == null || account.Email.StartsWith(request.Email)) &&
-                (request.RoleId == null || account.RoleId == request.RoleId) &&
-                (!request.IsActive.HasValue || account.IsActive == request.IsActive)
+                (email == null || account.Email.ToLower().StartsWith(email.ToLower())) &&
+                (roleId == null || account.RoleId == roleId) &&
+                (!isActive.HasValue || account.IsActive == isActive)
             );
             var responseList = accounts.Select(account => AccountToResponseModel(account)).ToList();
             return Ok(responseList);
@@ -131,7 +134,7 @@ namespace IeltsTestWeb.Controllers
             return Ok(new { AvatarUrl = avatarUrl });
         }
 
-        [HttpPatch("Update/{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult<AccountResponseModel>> UpdateAccount(int id, [FromBody] UpdateAccountRequestModel request)
         {
             var account = await database.Accounts.FindAsync(id);
@@ -141,12 +144,22 @@ namespace IeltsTestWeb.Controllers
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            
-            if(!string.IsNullOrEmpty(request.Email))
-                account.Email = request.Email;
 
-            if (request.Goal != null)
-                account.Goal = request.Goal;
+            var requestProperties = typeof(UpdateAccountRequestModel).GetProperties();
+            var accountProperties = typeof(Account).GetProperties();
+
+            foreach (var prop in requestProperties)
+            {
+                var requestValue = prop.GetValue(request);
+
+                // If the value is not null, find corresponding property in account and update
+                if (requestValue != null)
+                {
+                    var accountProp = accountProperties.FirstOrDefault(p => p.Name == prop.Name);
+                    if (accountProp != null && accountProp.CanWrite)
+                        accountProp.SetValue(account, requestValue);
+                }
+            }
 
             await database.SaveChangesAsync();
 

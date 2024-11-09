@@ -1,6 +1,7 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
+using System.Linq;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -61,6 +62,19 @@ namespace IeltsTestWeb.Controllers
         {
             var relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), fullPath);
             return "/" + relativePath.Replace("\\", "/");
+        }
+        public static bool IsSoundValid(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return false;
+
+            var allowedExtensions = new[] { ".mp3", ".wav", ".flac" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(fileExtension))
+                return false;
+
+            return true;
         }
     }
 }
