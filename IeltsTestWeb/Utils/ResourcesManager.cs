@@ -13,7 +13,8 @@ namespace IeltsTestWeb.Utils
         public static string avatarsDir { get; } = Path.Combine(uploadDir, "images", "avatars");
         public static string soundsDir { get; } = Path.Combine(uploadDir, "sounds");
         public static string sectionsDir { get; } = Path.Combine(uploadDir, "images", "sections");
-        public static bool IsImageValid(IFormFile file)
+        public static string qlistDir { get; } = Path.Combine(uploadDir, "images", "question_list");
+        public static bool IsImageValid(IFormFile? file)
         {
             if (file == null || file.Length == 0)
                 return false;
