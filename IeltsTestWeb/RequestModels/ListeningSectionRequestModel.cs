@@ -6,7 +6,6 @@ namespace IeltsTestWeb.RequestModels
     {
         public int SectionOrder { get; set; }
 
-        [SwaggerSchema(Format = "time", Description = "Time in HH:mm:ss format")]
         public TimeOnly TimeStamp { get; set; }
         
         public string? Transcript { get; set; }

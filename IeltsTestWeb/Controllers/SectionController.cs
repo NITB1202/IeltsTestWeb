@@ -11,6 +11,7 @@ namespace IeltsTestWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class SectionController : ControllerBase
     {
         private readonly ieltsDbContext database;
@@ -41,6 +42,9 @@ namespace IeltsTestWeb.Controllers
             };
         }
 
+        /// <summary>
+        /// Create new reading section.
+        /// </summary>
         [HttpPost("Reading/{testId}")]
         public async Task<ActionResult<ReadingSectionResponseModel>> CreateReadingSection(int testId, [FromBody] ReadingSectionRequestModel request)
         {
@@ -65,6 +69,9 @@ namespace IeltsTestWeb.Controllers
             return Ok(ReadingSectionToResponseModel(section));
         }
 
+        /// <summary>
+        /// Create new listening section.
+        /// </summary>
         [HttpPost("Listening/{testId}")]
         public async Task<ActionResult<ListeningSectionResponseModel>> CreateListeningSection(int testId, [FromBody] ListeningSectionRequestModel request)
         {
@@ -99,6 +106,9 @@ namespace IeltsTestWeb.Controllers
             return Ok(ListeningSectionToResponseModel(section));
         }
 
+        /// <summary>
+        /// Get all sections belong to the test.
+        /// </summary>
         [HttpGet("{testId}")]
         public async Task<IActionResult> FindAllTestSections(int testId)
         {
@@ -129,6 +139,9 @@ namespace IeltsTestWeb.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Update the reading section information.
+        /// </summary>
         [HttpPatch("Reading/{id}")]
         public async Task<ActionResult<ReadingSectionResponseModel>> UpdateReadingSection(int id, [FromBody] UpdateRSectionRequestModel request)
         {
@@ -145,6 +158,9 @@ namespace IeltsTestWeb.Controllers
             return Ok(ReadingSectionToResponseModel(section));
         }
 
+        /// <summary>
+        /// Update the listening section information.
+        /// </summary>
         [HttpPatch("Listening/{id}")]
         public async Task<ActionResult<ListeningSectionResponseModel>> UpdateListeningSection(int id, [FromBody] UpdateLSectionRequestModel request)
         {
@@ -159,7 +175,10 @@ namespace IeltsTestWeb.Controllers
             return Ok(ListeningSectionToResponseModel(section));
         }
 
-        [HttpPost("ReadingImage/{id}")]
+        /// <summary>
+        /// Upload an image for the reading section.
+        /// </summary>
+        [HttpPost("Image/{id}")]
         public async Task<IActionResult> UploadReadingSectionImage(int id, IFormFile file)
         {
             var section = await database.ReadingSections.FindAsync(id);

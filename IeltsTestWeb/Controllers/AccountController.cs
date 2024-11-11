@@ -6,18 +6,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Processing;
-using System.ComponentModel.DataAnnotations;
-using System.Security.Principal;
-using System.Text.RegularExpressions;
 
 namespace IeltsTestWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class AccountController : ControllerBase
     {
         private readonly ieltsDbContext database;
@@ -38,6 +33,9 @@ namespace IeltsTestWeb.Controllers
             };
         }
 
+        /// <summary>
+        /// Get all accounts in the system.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AccountResponseModel>>> GetAllAcounts()
         {
@@ -46,7 +44,10 @@ namespace IeltsTestWeb.Controllers
             return Ok(responseList);
         }
 
-        [HttpPost("Create")]
+        /// <summary>
+        /// Create new account.
+        /// </summary>
+        [HttpPost]
         public async Task<ActionResult<AccountResponseModel>> CreateNewAccount([FromBody] AccountRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -65,7 +66,10 @@ namespace IeltsTestWeb.Controllers
             await database.SaveChangesAsync();
             return Ok(AccountToResponseModel(account));
         }
-        
+
+        /// <summary>
+        /// Get account by id.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<AccountResponseModel>> FindAccountById(int id)
         {
@@ -77,7 +81,10 @@ namespace IeltsTestWeb.Controllers
             return Ok(AccountToResponseModel(account));
         }
 
-        [HttpGet("FindMatch")]
+        /// <summary>
+        /// Find all accounts that match the query parameters.
+        /// </summary>
+        [HttpGet("Match")]
         public ActionResult<IEnumerable<AccountResponseModel>> FindAccountsMatch(
             [FromQuery] string? email, [FromQuery] int? roleId, [FromQuery] bool? isActive)
         {
@@ -90,6 +97,9 @@ namespace IeltsTestWeb.Controllers
             return Ok(responseList);
         }
 
+        /// <summary>
+        /// Deactivate a specific account.
+        /// </summary>
         [HttpPatch("Deactivate/{id}")]
         public async Task<IActionResult> DeactivateAccount(int id)
         {
@@ -101,6 +111,9 @@ namespace IeltsTestWeb.Controllers
             return Ok("Deactivate account successfully!");
         }
 
+        /// <summary>
+        /// Upload a profile picture for an account.
+        /// </summary>
         [HttpPost("Image/{id}")]
         public async Task<IActionResult> UpdateProfileImage(int id, IFormFile file)
         {
@@ -135,6 +148,9 @@ namespace IeltsTestWeb.Controllers
             return Ok(new { AvatarUrl = avatarUrl });
         }
 
+        /// <summary>
+        /// Update the account information.
+        /// </summary>
         [HttpPatch("{id}")]
         public async Task<ActionResult<AccountResponseModel>> UpdateAccount(int id, [FromBody] UpdateAccountRequestModel request)
         {

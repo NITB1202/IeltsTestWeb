@@ -5,8 +5,12 @@ namespace IeltsTestWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class ResourcesController : ControllerBase
     {
+        /// <summary>
+        ///  Get resource url by relative path
+        /// </summary>
         [HttpPost()]
         public IActionResult GetResource([FromBody] string path)
         {

@@ -10,6 +10,7 @@ namespace IeltsTestWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class TestController : ControllerBase
     {
         private readonly ieltsDbContext database;
@@ -44,6 +45,9 @@ namespace IeltsTestWeb.Controllers
             };
         }
 
+        /// <summary>
+        /// Get all tests in the system.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TestResponseModel>>> GetAllTests()
         {
@@ -51,7 +55,10 @@ namespace IeltsTestWeb.Controllers
             var responseList = tests.Select(test => TestToResponseModel(test)).ToList();
             return Ok(responseList);
         }
-
+        
+        /// <summary>
+        /// Get test by id.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<TestResponseModel>> FindTestById(int id)
         {
@@ -62,8 +69,11 @@ namespace IeltsTestWeb.Controllers
 
             return Ok(TestToResponseModel(test));
         }
-
-        [HttpPost("Create")]
+        
+        /// <summary>
+        /// Create new test.
+        /// </summary>
+        [HttpPost]
         public async Task<ActionResult<TestResponseModel>> CreateNewTest([FromBody] TestRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -86,6 +96,9 @@ namespace IeltsTestWeb.Controllers
             return Ok(TestToResponseModel(test));
         }
 
+        /// <summary>
+        /// Update the test information.
+        /// </summary>
         [HttpPatch("{id}")]
         public async Task<ActionResult<TestResponseModel>> UpdateTest(int id, [FromBody] TestRequestModel request)
         {
@@ -121,7 +134,10 @@ namespace IeltsTestWeb.Controllers
             return Ok(TestToResponseModel(test));
         }
 
-        [HttpGet("FindMatch")]
+        /// <summary>
+        /// Find all tests that match the query parameters.
+        /// </summary>
+        [HttpGet("Match")]
         public ActionResult<IEnumerable<TestResponseModel>> FindTestsMatch(
             [FromQuery] string? name, [FromQuery] string? testType, [FromQuery] string? testSkill,
             [FromQuery] int? monthEdition, [FromQuery] int? yearEdition)

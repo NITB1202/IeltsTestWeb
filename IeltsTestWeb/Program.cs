@@ -7,15 +7,19 @@ using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 using Microsoft.Extensions.FileProviders;
 using IeltsTestWeb.Utils;
+using Microsoft.Extensions.Options;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
-    });
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
+});
+
+// Add converter
+builder.Services.AddDateOnlyTimeOnlyStringConverters();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -61,13 +65,14 @@ builder.Services.AddAuthentication(options =>
 // Add Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
-
-    c.MapType<TimeOnly>(() => new OpenApiSchema
-    {
-        Type = "string",
-        Format = "time"
+    c.SwaggerDoc("v1", new OpenApiInfo { 
+        Title = "Ielts test API",
+        Description = "An ASP.NET Core Web API for managing the Ielts test system",
+        Version = "v1", 
     });
+
+    c.UseDateOnlyTimeOnlyStringConverters();
+    c.SchemaFilter<TimeOnlySchemaFilter>();
 
     // Add Swagger config for JWT Bearer
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -92,6 +97,10 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+
+    // using System.Reflection;
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
 var app = builder.Build();

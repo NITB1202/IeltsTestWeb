@@ -22,6 +22,7 @@ namespace IeltsTestWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class AuthenticationController : ControllerBase
     {
         private readonly ieltsDbContext database;
@@ -35,14 +36,20 @@ namespace IeltsTestWeb.Controllers
             this.redis = redis;
         }
 
-        [HttpGet("AllRoles")]
+        /// <summary>
+        /// Get all roles in the system.
+        /// </summary>
+        [HttpGet("Role")]
         public async Task<ActionResult<IEnumerable<Models.Role>>> GetAllRoles()
         {
             var roleList = await database.Roles.ToListAsync();
             return Ok(roleList);
         }
 
-        [HttpPatch("UpdateRole/{id}")]
+        /// <summary>
+        /// Get role by id.
+        /// </summary>
+        [HttpPatch("Role/{id}")]
         public async Task<IActionResult> UpdateAccountRole(int id, [FromBody] int roleId)
         {
             var account = await database.Accounts.FindAsync(id);
@@ -60,6 +67,9 @@ namespace IeltsTestWeb.Controllers
             return NotFound("Can't find role with id " + roleId);
         }
 
+        /// <summary>
+        /// Login to the system.
+        /// </summary>
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel request)
         {
@@ -82,8 +92,11 @@ namespace IeltsTestWeb.Controllers
             return Unauthorized("Invalid username or password.");
         }
 
+        /// <summary>
+        /// Test the authentication for the Admin role.
+        /// </summary>
         [Authorize(Roles = "admin")]
-        [HttpGet("TestAuthentication")]
+        [HttpGet("Test")]
         public IActionResult TestAuthentication()
         {
             return Ok("This is ADMIN DATA");
@@ -114,7 +127,10 @@ namespace IeltsTestWeb.Controllers
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
         }
 
-        [HttpPost("SendVerificationCode")]
+        /// <summary>
+        /// Send verification code to a specific email.
+        /// </summary>
+        [HttpPost("Code")]
         public async Task<IActionResult> SendVerificationCode([FromBody] string email)
         {
             // Generate verification code
@@ -150,8 +166,11 @@ namespace IeltsTestWeb.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-        [HttpPost("Verification")]
+        
+        /// <summary>
+        /// Verify the account.
+        /// </summary>
+        [HttpPost("Verify")]
         public async Task<IActionResult> Verification([FromBody] VerifyRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -169,7 +188,10 @@ namespace IeltsTestWeb.Controllers
             return BadRequest("Invalid verification code.");
         }
 
-        [HttpPost("ResetPassword")]
+        /// <summary>
+        /// Reset password.
+        /// </summary>
+        [HttpPost("Password")]
         public async Task<IActionResult> ResetPassword([FromHeader] string newPassword,[FromBody] LoginRequestModel request)
         {
             if (!ModelState.IsValid)

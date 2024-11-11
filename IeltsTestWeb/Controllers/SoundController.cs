@@ -9,6 +9,7 @@ namespace IeltsTestWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class SoundController : ControllerBase
     {
         private readonly ieltsDbContext database;
@@ -17,6 +18,9 @@ namespace IeltsTestWeb.Controllers
             this.database = database;
         }
 
+        /// <summary>
+        /// Upload an audio file for a listening test.
+        /// </summary>
         [HttpPost("{testId}")]
         public async Task<ActionResult<Sound>> UploadTestSound(int testId, IFormFile file)
         {
@@ -68,6 +72,9 @@ namespace IeltsTestWeb.Controllers
             return Ok(new { soundUrl = soundUrl });
         }
 
+        /// <summary>
+        /// Get a listening test audio file.
+        /// </summary>
         [HttpGet("{testId}")]
         public async Task<IActionResult> GetTestSound(int testId)
         {
