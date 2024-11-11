@@ -6,12 +6,17 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 using Microsoft.Extensions.FileProviders;
+using IeltsTestWeb.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
+    });
 
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -57,6 +62,12 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+    c.MapType<TimeOnly>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "time"
+    });
 
     // Add Swagger config for JWT Bearer
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

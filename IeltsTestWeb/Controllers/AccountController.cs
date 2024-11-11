@@ -1,6 +1,7 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
+using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -100,7 +101,7 @@ namespace IeltsTestWeb.Controllers
             return Ok("Deactivate account successfully!");
         }
 
-        [HttpPost("UpdateProfileImage/{id}")]
+        [HttpPost("Image/{id}")]
         public async Task<IActionResult> UpdateProfileImage(int id, IFormFile file)
         {
             var account = await database.Accounts.FindAsync(id);

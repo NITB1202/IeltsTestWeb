@@ -3,7 +3,7 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 using System.Linq;
 
-namespace IeltsTestWeb.Controllers
+namespace IeltsTestWeb.Utils
 {
     public class ResourcesManager
     {
@@ -12,6 +12,7 @@ namespace IeltsTestWeb.Controllers
         public static string uploadDir { get; } = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
         public static string avatarsDir { get; } = Path.Combine(uploadDir, "images", "avatars");
         public static string soundsDir { get; } = Path.Combine(uploadDir, "sounds");
+        public static string sectionsDir { get; } = Path.Combine(uploadDir, "images", "sections");
         public static bool IsImageValid(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -33,12 +34,12 @@ namespace IeltsTestWeb.Controllers
 
             var files = Directory.GetFiles(Directory.GetCurrentDirectory() + dirPath);
             var fileName = Path.GetFileNameWithoutExtension(url);
-            
-            foreach(var file in files)
+
+            foreach (var file in files)
             {
-                if(Path.GetFileNameWithoutExtension(file) == fileName)
+                if (Path.GetFileNameWithoutExtension(file) == fileName)
                 {
-                    System.IO.File.Delete(file);
+                    File.Delete(file);
                     return true;
                 }
             }
@@ -87,7 +88,7 @@ namespace IeltsTestWeb.Controllers
 
             return true;
         }
-        public static async Task SaveSound(IFormFile file, string filePath) 
+        public static async Task SaveSound(IFormFile file, string filePath)
         {
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
