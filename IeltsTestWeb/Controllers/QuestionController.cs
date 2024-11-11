@@ -39,6 +39,12 @@ namespace IeltsTestWeb.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var qlist = await database.QuestionLists.FindAsync(request.QlistId);
+            if (qlist == null)
+                return NotFound("Can't find question list with id " + request.QlistId);
+
+            qlist.Qnum += 1;
+
             var question = new Question
             {
                 QlistId = request.QlistId,
@@ -48,6 +54,7 @@ namespace IeltsTestWeb.Controllers
             };
 
             database.Questions.Add(question);
+            
             await database.SaveChangesAsync();
 
             return Ok(QuestionToResponseModel(question));

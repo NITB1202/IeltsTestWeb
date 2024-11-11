@@ -154,5 +154,51 @@ namespace IeltsTestWeb.Controllers
 
             return Ok(responseList);
         }
+
+        /// <summary>
+        /// Validate the test before saving.
+        /// </summary>
+        [HttpGet("Validate/{id}")]
+        public async Task<ActionResult> ValidateTest(int id)
+        {
+            // Find test
+            var test = await database.Tests.FindAsync(id);
+            if (test == null)
+                return NotFound("Can't find test with id " + id);
+
+            var qlists = new List<QuestionList>();
+            var questionNum = 0;
+
+            if (test.TestSkill == "reading")
+            {
+                foreach(var qlist in database.QuestionLists.Include(q => q.Rsections))
+                {
+                    var section = qlist.Rsections.FirstOrDefault();
+                    if (section != null && section.TestId == id)
+                        qlists.Add(qlist);
+                }
+            }    
+
+            if(test.TestSkill == "listening")
+            {
+                var sound = await database.Sounds.FirstOrDefaultAsync(s => s.TestId == id);
+                if (sound == null)
+                    return NotFound("Can't find sound for this test");
+
+                foreach(var qlist in database.QuestionLists.Include(q => q.Lsections))
+                {
+                    var section = qlist.Lsections.FirstOrDefault();
+                    if (section != null && section.SoundId == sound.SoundId)
+                        qlists.Add(qlist);
+                }
+            }
+            foreach (var qlist in qlists)
+                questionNum += qlist.Qnum;
+
+            if (questionNum == 40)
+                return Ok("The test is valid");
+
+            return BadRequest("The test should consist of 40 questions");
+        }
     }
 }
