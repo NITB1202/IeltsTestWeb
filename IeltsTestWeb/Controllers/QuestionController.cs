@@ -33,15 +33,15 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Create new question for question list.
         /// </summary>
-        [HttpPost("{id}")]
-        public async Task<ActionResult<QuestionResponseModel>> CreateNewQuestion(int id,[FromBody]QuestionRequestModel request )
+        [HttpPost]
+        public async Task<ActionResult<QuestionResponseModel>> CreateNewQuestion([FromBody]QuestionRequestModel request )
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var question = new Question
             {
-                QlistId = id,
+                QlistId = request.QlistId,
                 Content = request.Content,
                 ChoiceList = request.ChoiceList,
                 Answer = request.Answer
@@ -59,7 +59,7 @@ namespace IeltsTestWeb.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
-        public async Task<ActionResult<IEnumerable<QuestionRequestModel>>> GetQuestionListQuestion(int id)
+        public async Task<ActionResult<IEnumerable<QuestionResponseModel>>> GetQuestionListQuestion(int id)
         {
             var questions = database.Questions.Where(q => q.QlistId == id);
             var responeList = await questions.Select(q => QuestionToResponseModel(q)).ToListAsync();

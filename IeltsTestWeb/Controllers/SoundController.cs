@@ -21,13 +21,13 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Upload an audio file for a listening test.
         /// </summary>
-        [HttpPost("{testId}")]
-        public async Task<ActionResult<Sound>> UploadTestSound(int testId, IFormFile file)
+        [HttpPost("{id}")]
+        public async Task<ActionResult<Sound>> UploadTestSound(int id, IFormFile file)
         {
-            var test = await database.Tests.FindAsync(testId);
+            var test = await database.Tests.FindAsync(id);
 
             if (test == null)
-                return NotFound("Can't find test with id " + testId);
+                return NotFound("Can't find test with id " + id);
 
             if (test.TestSkill != "listening")
                 return BadRequest("The test skill is not 'listening'");
@@ -36,7 +36,7 @@ namespace IeltsTestWeb.Controllers
                 return BadRequest("Invalid sound");
 
             // Delete old sound
-            var oldSound = await database.Sounds.FirstOrDefaultAsync(sound => sound.TestId == testId);
+            var oldSound = await database.Sounds.FirstOrDefaultAsync(sound => sound.TestId == id);
             if (oldSound != null)
                 ResourcesManager.RemoveFile(oldSound.SoundLink);
 
@@ -45,7 +45,7 @@ namespace IeltsTestWeb.Controllers
 
             // Create file path
             var fileExtension = Path.GetExtension(file.FileName);
-            var fileName = $"soundTest_{testId}{fileExtension}";
+            var fileName = $"soundTest_{id}{fileExtension}";
             var filePath = Path.Combine(ResourcesManager.soundsDir, fileName);
 
             // Save sound
@@ -57,7 +57,7 @@ namespace IeltsTestWeb.Controllers
             {
                 var sound = new Sound
                 {
-                    TestId = testId,
+                    TestId = id,
                     SoundLink = relativePath
                 };
 
@@ -75,13 +75,13 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get a listening test audio file.
         /// </summary>
-        [HttpGet("{testId}")]
-        public async Task<IActionResult> GetTestSound(int testId)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTestSound(int id)
         {
-            var sound = await database.Sounds.FirstOrDefaultAsync(s => s.TestId == testId);
+            var sound = await database.Sounds.FirstOrDefaultAsync(s => s.TestId == id);
 
             if (sound == null)
-                return NotFound("Can't find sound for test with " + testId);
+                return NotFound("Can't find sound for test with " + id);
 
             return Ok(sound.SoundLink);
         }

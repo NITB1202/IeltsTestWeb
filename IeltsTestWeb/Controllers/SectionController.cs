@@ -43,24 +43,35 @@ namespace IeltsTestWeb.Controllers
         }
 
         /// <summary>
-        /// Create new reading section.
+        /// Create a new reading section for the reading test.
         /// </summary>
-        [HttpPost("Reading/{testId}")]
-        public async Task<ActionResult<ReadingSectionResponseModel>> CreateReadingSection(int testId, [FromBody] ReadingSectionRequestModel request)
+        [HttpPost("Reading")]
+        public async Task<ActionResult<ReadingSectionResponseModel>> CreateReadingSection([FromBody] ReadingSectionRequestModel request)
         {
-            var test = await database.Tests.FindAsync(testId);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var test = await database.Tests.FindAsync(request.TestId);
 
             if (test == null)
-                return NotFound("Can't find test with id " + testId);
+                return NotFound("Can't find test with id " + request.TestId);
 
             if (test.TestSkill != "reading")
                 return BadRequest("Can't add a reading section to a listening test");
+
+            var maxSectionNum = await database.Constants.FindAsync("readingSectionNum");
+            if (maxSectionNum == null)
+                return NotFound("Can't find reading section limit");
+
+            var sectionCount = await database.ReadingSections.CountAsync(section => section.TestId == request.TestId);
+            if (sectionCount == maxSectionNum.Value)
+                return BadRequest("The test has reached its maximum section.");
 
             var section = new ReadingSection
             {
                 Title = request.Title,
                 Content = request.Content,
-                TestId = testId
+                TestId = request.TestId
             };
 
             database.ReadingSections.Add(section);
@@ -70,26 +81,28 @@ namespace IeltsTestWeb.Controllers
         }
 
         /// <summary>
-        /// Create new listening section.
+        /// Create a new listening section for the sound.
         /// </summary>
-        [HttpPost("Listening/{testId}")]
-        public async Task<ActionResult<ListeningSectionResponseModel>> CreateListeningSection(int testId, [FromBody] ListeningSectionRequestModel request)
+        [HttpPost("Listening")]
+        public async Task<ActionResult<ListeningSectionResponseModel>> CreateListeningSection([FromBody] ListeningSectionRequestModel request)
         {
-            // Validate data
-            var test = await database.Tests.FindAsync(testId);
-
-            if (test == null)
-                return NotFound("Can't find test with id " + testId);
-
-            if (test.TestSkill != "listening")
-                return BadRequest("Can't add a listening section to a reading test");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             if (!await database.Sounds.AnyAsync(sound => sound.SoundId == request.SoundId))
-                return NotFound("Can't find sound with id ");
+                return NotFound("Can't find sound with id " + request.SoundId);
+
+            var sections = database.ListeningSections.Where(s => s.SoundId == request.SoundId);
+            var sectionCount = sections.Count();
+
+            var maxSectionNum = await database.Constants.FindAsync("listeningSectionNum");
+            if (maxSectionNum == null)
+                return NotFound("Can't find listening section limit");
+            if(sectionCount == maxSectionNum.Value)
+                return BadRequest("The test has reached its maximum section.");
 
             // Check dupplicate
-            if (await database.ListeningSections.AnyAsync(section =>
-                section.SoundId == request.SoundId && section.SectionOrder == request.SectionOrder))
+            if (sections.Any(s => s.SectionOrder == request.SectionOrder))
                 return BadRequest("This sound already has section " + request.SectionOrder);
 
             var section = new ListeningSection
@@ -109,17 +122,17 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get all sections belong to the test.
         /// </summary>
-        [HttpGet("{testId}")]
-        public async Task<IActionResult> FindAllTestSections(int testId)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> FindAllTestSections(int id)
         {
-            var test = await database.Tests.FindAsync(testId);
+            var test = await database.Tests.FindAsync(id);
 
             if (test == null)
-                return NotFound("Can't find test with id " + testId);
+                return NotFound("Can't find test with id " + id);
 
             if(test.TestSkill == "reading")
             {
-                var sections = database.ReadingSections.Where(s => s.TestId == testId);
+                var sections = database.ReadingSections.Where(s => s.TestId == id);
                 var responseList = sections.Select(s => ReadingSectionToResponseModel(s));
                 return Ok(responseList);
             }
@@ -127,7 +140,7 @@ namespace IeltsTestWeb.Controllers
             if(test.TestSkill == "listening")
             {
                 var soundId = await database.Sounds
-                    .Where(sound => sound.TestId == testId)
+                    .Where(sound => sound.TestId == id)
                     .Select(sound => sound.SoundId)
                     .FirstOrDefaultAsync();
 

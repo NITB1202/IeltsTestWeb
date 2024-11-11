@@ -4,8 +4,9 @@ namespace IeltsTestWeb.RequestModels
 {
     public class QuestionRequestModel
     {
+        [Required(ErrorMessage = "Question list id is required.")]
+        public int QlistId { get; set; }
         public string? Content { get; set; }
-
         public string? ChoiceList { get; set; }
 
         [Required(ErrorMessage = "Answer is required.")]

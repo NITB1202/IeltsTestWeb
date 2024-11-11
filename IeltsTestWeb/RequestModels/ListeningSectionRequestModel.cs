@@ -1,4 +1,5 @@
 ﻿using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace IeltsTestWeb.RequestModels
 {
@@ -9,7 +10,8 @@ namespace IeltsTestWeb.RequestModels
         public TimeOnly TimeStamp { get; set; }
         
         public string? Transcript { get; set; }
-        
+
+        [Required(ErrorMessage = "Sound id is required")]
         public int SoundId { get; set; }
     }
 }
