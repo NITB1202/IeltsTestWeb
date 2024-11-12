@@ -192,13 +192,14 @@ namespace IeltsTestWeb.Controllers
                         qlists.Add(qlist);
                 }
             }
+
             foreach (var qlist in qlists)
                 questionNum += qlist.Qnum;
 
             if (questionNum == 40)
                 return Ok("The test is valid");
 
-            return BadRequest("The test should consist of 40 questions");
+            return BadRequest("The test should consist of 40 questions. Curent questions: " + questionNum);
         }
     }
 }

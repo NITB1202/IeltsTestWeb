@@ -422,9 +422,9 @@ public partial class ieltsDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .HasColumnName("name");
-            entity.Property(e => e.TestSkil)
+            entity.Property(e => e.TestSkill)
                 .HasColumnType("enum('listening','reading')")
-                .HasColumnName("test_skil");
+                .HasColumnName("test_skill");
             entity.Property(e => e.TestType)
                 .HasColumnType("enum('general','academic')")
                 .HasColumnName("test_type");

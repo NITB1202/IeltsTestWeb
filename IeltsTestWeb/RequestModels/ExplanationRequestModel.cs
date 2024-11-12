@@ -4,7 +4,7 @@ namespace IeltsTestWeb.RequestModels
 {
     public class ExplanationRequestModel
     {
-        [Required(ErrorMessage = "Question id is required.")]
+        [Required(ErrorMessage = "QuestionId is required.")]
         public int QuestionId { get; set; }
 
         [Required(ErrorMessage = "Content is required.")]

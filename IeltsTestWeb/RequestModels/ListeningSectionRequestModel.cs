@@ -11,7 +11,7 @@ namespace IeltsTestWeb.RequestModels
         
         public string? Transcript { get; set; }
 
-        [Required(ErrorMessage = "Sound id is required")]
+        [Required(ErrorMessage = "SoundId is required")]
         public int SoundId { get; set; }
     }
 }

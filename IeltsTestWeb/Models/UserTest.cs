@@ -15,7 +15,7 @@ public partial class UserTest
 
     public string TestType { get; set; } = null!;
 
-    public string TestSkil { get; set; } = null!;
+    public string TestSkill { get; set; } = null!;
 
     public virtual Account Account { get; set; } = null!;
 

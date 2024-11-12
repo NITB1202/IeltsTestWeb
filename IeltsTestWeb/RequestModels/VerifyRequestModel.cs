@@ -8,7 +8,7 @@ namespace IeltsTestWeb.RequestModels
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; } =  null!;
 
-        [Required(ErrorMessage = "Verification code is required.")]
+        [Required(ErrorMessage = "VerificationCode is required.")]
         public string VerificationCode { get; set; } = null!;
     }
 }

@@ -136,7 +136,7 @@ CREATE TABLE UserTest(
     name VARCHAR(255) NOT NULL,
     date_create DATETIME DEFAULT CURRENT_TIMESTAMP,
     test_type ENUM('general','academic') NOT NULL,
-    test_skil ENUM('listening', 'reading') NOT NULL,
+    test_skill ENUM('listening', 'reading') NOT NULL,
     FOREIGN KEY (account_id) REFERENCES Account(account_id)
 );
 
