@@ -10,6 +10,7 @@ namespace IeltsTestWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class ResultController : ControllerBase
     {
         private readonly ieltsDbContext database;
