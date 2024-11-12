@@ -4,6 +4,7 @@ using IeltsTestWeb.ResponseModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -85,23 +86,39 @@ namespace IeltsTestWeb.Controllers
             if (test.TestSkill != "reading")
                 return BadRequest("Test skill is not reading");
 
-            var sectionIds = new List<int>();
+            var candidates = new Dictionary<string, List<int>>();
 
             foreach (var type in request.Types)
             {
+                if (!candidates.ContainsKey(type))
+                    candidates[type] = new List<int>();
+
+                // Get question list along with reading section.
                 foreach (var qlist in database.QuestionLists.Include(qlist => qlist.Rsections))
                 {
+                    // If the question list type fits, check if it is from the reading section.
+
                     if (qlist.QlistType == type)
                     {
                         var section = qlist.Rsections.FirstOrDefault();
-                        if (section != null && !sectionIds.Contains(section.RsectionId))
-                        {
-                            sectionIds.Add(section.RsectionId);
-                            break;
-                        }
+
+                        // If it from a reading section, add this section to list of candidates
+                        if (section != null)
+                            candidates[type].Add(section.RsectionId);
                     }
                 }
             }
+
+            var allResults = new List<List<int>>();
+            var usedItemIds = new HashSet<int>();
+
+            FindAllSelectionsRecursively(request.Types, candidates, 0, usedItemIds, new List<int>(), allResults);
+
+            if (allResults.Count == 0)
+                return BadRequest("Cannot find a valid selection that satisfies all conditions");
+
+            var index = new Random().Next(0, allResults.Count);
+            var sectionIds = allResults[index];
 
             if (sectionIds.Count != request.Types.Count)
                 return BadRequest("Can't find a test that matches all the types described.");
@@ -120,6 +137,34 @@ namespace IeltsTestWeb.Controllers
             await database.SaveChangesAsync();
 
             return Ok(new { sectionIds = sectionIds });
+        }
+        private static void FindAllSelectionsRecursively(List<string> conditions, Dictionary<string, List<int>> candidates,
+                                                  int index, HashSet<int> usedItemIds, List<int> currentSelection, List<List<int>> allResults)
+        {
+            if (index == conditions.Count)
+            {
+                // When all conditions are met, include this selection in the result.
+                allResults.Add(new List<int>(currentSelection));
+                return;
+            }
+
+            var condition = conditions[index];
+            foreach (var item in candidates[condition])
+            {
+                if (!usedItemIds.Contains(item))
+                {
+                    // Select the item for current condition
+                    usedItemIds.Add(item);
+                    currentSelection.Add(item);
+
+                    // Recursive to find all possible sets for the next condition
+                    FindAllSelectionsRecursively(conditions, candidates, index + 1, usedItemIds, currentSelection, allResults);
+
+                    // Remove this item to continue with the other selection
+                    usedItemIds.Remove(item);
+                    currentSelection.RemoveAt(currentSelection.Count - 1);
+                }
+            }
         }
 
         /// <summary>
