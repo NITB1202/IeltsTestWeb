@@ -15,7 +15,7 @@ public partial class Result
 
     public string TestAccess { get; set; } = null!;
 
-    public DateTime? DateMake { get; set; }
+    public DateTime DateMake { get; set; }
 
     public TimeOnly? CompleteTime { get; set; }
 

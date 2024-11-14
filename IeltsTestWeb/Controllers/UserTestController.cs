@@ -115,13 +115,10 @@ namespace IeltsTestWeb.Controllers
             FindAllSelectionsRecursively(request.Types, candidates, 0, usedItemIds, new List<int>(), allResults);
 
             if (allResults.Count == 0)
-                return BadRequest("Cannot find a valid selection that satisfies all conditions");
+                return BadRequest("Can't find a test that matches all the types described.");
 
             var index = new Random().Next(0, allResults.Count);
             var sectionIds = allResults[index];
-
-            if (sectionIds.Count != request.Types.Count)
-                return BadRequest("Can't find a test that matches all the types described.");
 
             foreach (var sectionId in sectionIds)
             {
@@ -168,7 +165,7 @@ namespace IeltsTestWeb.Controllers
         }
 
         /// <summary>
-        /// Create a reading test details featuring matching types.
+        /// Create a listening test details featuring matching types.
         /// </summary>
         /// <returns></returns>
         [HttpPost("Listening")]
@@ -185,11 +182,80 @@ namespace IeltsTestWeb.Controllers
             if (test.TestSkill != "listening")
                 return BadRequest("Test skill is not listening");
 
-            foreach(var sound in database.Sounds)
-            {
+            // Create new dictionary to store soundId and available question list type
+            var candidates = new Dictionary<int, List<string>>();
 
+            foreach(var qlist in database.QuestionLists.Include(q => q.Lsections))
+            {
+                if(request.Types.Contains(qlist.QlistType))
+                {
+                    var section = qlist.Lsections.FirstOrDefault();
+                    if(section != null)
+                    {
+                        var soundId = section.SoundId;
+
+                        if (!candidates.ContainsKey(soundId))
+                            candidates[soundId] = new List<string>();
+
+                        candidates[soundId].Add(qlist.QlistType);
+                    }
+
+                }
             }
-            return Ok();
+
+            var typeCounts = request.Types
+                .GroupBy(condition => condition)
+                .ToDictionary(group => group.Key, group => group.Count());
+
+            var possibleResults = new List<int>();
+
+            foreach (var candidate in candidates)
+            {
+                // Count the number of each type occur in the sound available type list
+                var itemConditionCounts = candidate.Value
+                    .GroupBy(condition => condition)
+                    .ToDictionary(group => group.Key, group => group.Count());
+
+                // Check if each type occur in the sound available type list has enough occurence in type list
+                bool satisfiesAll = true;
+                foreach (var type in typeCounts)
+                {
+                    if (!itemConditionCounts.TryGetValue(type.Key, out int count) || count < type.Value)
+                    {
+                        satisfiesAll = false;
+                        break;
+                    }
+                }
+
+                if (satisfiesAll)
+                {
+                    possibleResults.Add(candidate.Key);
+                }
+            }
+
+            if (possibleResults.Count == 0)
+                return BadRequest("Can't find a test that matches all the types described.");
+
+            var index = new Random().Next(0, possibleResults.Count);
+
+            var sectionIds = database.ListeningSections
+                                    .Where(section => section.SoundId == possibleResults[index])
+                                    .Select(section => section.LsectionId);
+
+            foreach (var sectionId in sectionIds)
+            {
+                var detail = new UserTestDetail
+                {
+                    UtestId = request.TestId,
+                    SectionId = sectionId
+                };
+
+                database.UserTestDetails.Add(detail);
+            }
+
+            await database.SaveChangesAsync();
+
+            return Ok(new { sectionIds = sectionIds });
         }
 
         /// <summary>
