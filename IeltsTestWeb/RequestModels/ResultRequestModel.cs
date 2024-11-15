@@ -15,6 +15,6 @@ namespace IeltsTestWeb.RequestModels
         public string TestAccess { get; set; } = null!;
 
         [Required(ErrorMessage = "CompleteTime is required.")]
-        public TimeOnly? CompleteTime { get; set; }
+        public TimeOnly CompleteTime { get; set; }
     }
 }

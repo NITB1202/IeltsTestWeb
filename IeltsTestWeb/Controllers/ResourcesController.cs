@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using IeltsTestWeb.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IeltsTestWeb.Controllers
@@ -11,11 +12,20 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         ///  Get resource url by relative path
         /// </summary>
-        [HttpPost()]
+        [HttpPost]
         public IActionResult GetResource([FromBody] string path)
         {
             var url = $"{Request.Scheme}://{Request.Host}{path}";
             return Ok(url);
+        }
+
+        /// <summary>
+        /// Convert score to band.
+        /// </summary>
+        [HttpGet]
+        public IActionResult ScoreToBand([FromQuery] double score)
+        {
+            return Ok(ResourcesManager.ConvertScoreToBand(score));
         }
     }
 }

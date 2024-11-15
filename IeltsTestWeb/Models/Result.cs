@@ -7,7 +7,7 @@ public partial class Result
 {
     public int ResultId { get; set; }
 
-    public int? Score { get; set; }
+    public int Score { get; set; }
 
     public int AccountId { get; set; }
 
@@ -17,7 +17,7 @@ public partial class Result
 
     public DateTime DateMake { get; set; }
 
-    public TimeOnly? CompleteTime { get; set; }
+    public TimeOnly CompleteTime { get; set; }
 
     public virtual Account Account { get; set; } = null!;
 
