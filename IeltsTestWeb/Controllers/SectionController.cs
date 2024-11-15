@@ -208,7 +208,7 @@ namespace IeltsTestWeb.Controllers
 
             var fileExtension = Path.GetExtension(file.FileName);
             var fileName = $"section_{id}{fileExtension}";
-            var filePath = Path.Combine(ResourcesManager.avatarsDir, fileName);
+            var filePath = Path.Combine(ResourcesManager.sectionsDir, fileName);
 
             await ResourcesManager.SaveImage(file, filePath);
 
