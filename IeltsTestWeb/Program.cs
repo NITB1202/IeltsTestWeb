@@ -18,6 +18,17 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
 });
 
+// Config CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins("https://localhost:8081")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Add converter
 builder.Services.AddDateOnlyTimeOnlyStringConverters();
 
@@ -118,6 +129,8 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
     RequestPath = "/uploads"
 });
+
+app.UseCors("AllowSpecificOrigins");
 
 app.UseHttpsRedirection();
 

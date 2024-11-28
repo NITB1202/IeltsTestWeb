@@ -192,20 +192,19 @@ namespace IeltsTestWeb.Controllers
         /// Reset password.
         /// </summary>
         [HttpPost("Password")]
-        public async Task<IActionResult> ResetPassword([FromHeader] string newPassword,[FromBody] LoginRequestModel request)
+        public async Task<IActionResult> ResetPassword([FromBody] LoginRequestModel request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var updatedAccount = await database.Accounts.SingleOrDefaultAsync(ac => ac.Email.Equals(request.Email));
 
-            if(updatedAccount!= null && BCrypt.Net.BCrypt.Verify(request.Password,updatedAccount.Password))
+            if (updatedAccount != null)
             {
-                var hashPd = BCrypt.Net.BCrypt.HashPassword(newPassword);
-                updatedAccount.Password = hashPd;
-                database.Update(updatedAccount);
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                updatedAccount.Password = hashedPassword;
                 await database.SaveChangesAsync();
-                return Ok("Password changes to: "+newPassword);
+                return Ok("Password changes to: " + request.Password);
             }
 
             return NotFound("Can't find account.");
