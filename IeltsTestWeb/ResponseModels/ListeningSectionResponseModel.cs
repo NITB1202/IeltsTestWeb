@@ -11,5 +11,7 @@
         public string? Transcript { get; set; }
 
         public int SoundId { get; set; }
+
+        public int QuestionNum { get; set; }
     }
 }

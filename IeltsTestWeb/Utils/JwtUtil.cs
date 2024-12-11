@@ -12,14 +12,15 @@ namespace IeltsTestWeb.Utils
         {
             this.configuration = configuration;
         }
-        public string GenerateAccessToken(string username, string role)
+        public string GenerateAccessToken(int accountId, string username, string role)
         {
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, username),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Role, role),
-                new Claim("type","access_token")
+                new Claim("id", accountId.ToString()),
+                new Claim("type", "access_token")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
@@ -35,11 +36,12 @@ namespace IeltsTestWeb.Utils
 
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
         }
-        public string GenerateRefreshToken()
+        public string GenerateRefreshToken(int accountId)
         {
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("id", accountId.ToString()),
                 new Claim("type","refresh_token")
             };
 
@@ -56,7 +58,6 @@ namespace IeltsTestWeb.Utils
 
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
         }
-
         public static bool IsJwtValid(string token, string type)
         {
             try

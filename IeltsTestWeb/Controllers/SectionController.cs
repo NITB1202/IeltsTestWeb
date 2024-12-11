@@ -133,7 +133,24 @@ namespace IeltsTestWeb.Controllers
             if(test.TestSkill == "reading")
             {
                 var sections = database.ReadingSections.Where(s => s.TestId == id);
-                var responseList = sections.Select(s => ReadingSectionToResponseModel(s));
+                var responseList = await sections.Select(s => ReadingSectionToResponseModel(s)).ToListAsync();
+                var questionLists = await database.QuestionLists.Include(ql => ql.Rsections).ToListAsync();
+
+                foreach(ReadingSectionResponseModel section in responseList) 
+                {
+                    int questionNum = 0;
+                    
+                    foreach(var questionList in questionLists) 
+                    {
+                        var questionListSection = questionList.Rsections.FirstOrDefault();
+                        
+                        if (questionListSection != null && questionListSection.RsectionId == section.Id)
+                            questionNum += questionList.Qnum;
+                    }
+                  
+                    section.QuestionNum = questionNum;
+                }
+
                 return Ok(responseList);
             }
 
@@ -145,7 +162,24 @@ namespace IeltsTestWeb.Controllers
                     .FirstOrDefaultAsync();
 
                 var sections = database.ListeningSections.Where(s => s.SoundId == soundId);
-                var responseList = sections.Select(s => ListeningSectionToResponseModel(s));
+                var responseList = await sections.Select(s => ListeningSectionToResponseModel(s)).ToListAsync();
+                var questionLists = await database.QuestionLists.Include(ql => ql.Lsections).ToListAsync();
+
+                foreach(ListeningSectionResponseModel section in responseList) 
+                {
+                    int questionNum = 0;
+
+                    foreach(var questionList in questionLists)
+                    {
+                        var questionListSection = questionList.Lsections.FirstOrDefault();
+
+                        if (questionListSection != null && questionListSection.LsectionId == section.Id)
+                            questionNum += questionList.Qnum;
+                    }
+
+                    section.QuestionNum = questionNum;
+                }
+
                 return Ok(responseList);
             }
 

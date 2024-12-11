@@ -11,5 +11,7 @@
         public string Content { get; set; } = null!;
 
         public int TestId { get; set; }
+
+        public int QuestionNum { get; set; }
     }
 }

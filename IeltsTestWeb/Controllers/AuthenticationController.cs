@@ -17,6 +17,7 @@ using System.Security.Principal;
 using StackExchange.Redis;
 using Org.BouncyCastle.Asn1.Ocsp;
 using MimeKit.Tnef;
+using IeltsTestWeb.Utils;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -28,12 +29,15 @@ namespace IeltsTestWeb.Controllers
         private readonly ieltsDbContext database;
         private readonly IConfiguration configuration;
         private readonly IConnectionMultiplexer redis;
+        private readonly JwtUtil jwtUtil;
         private int verifyMinute { get; set; } = 5;
         public AuthenticationController(ieltsDbContext database, IConfiguration configuration, IConnectionMultiplexer redis)
         {
             this.database = database;
             this.configuration = configuration;
             this.redis = redis;
+
+            jwtUtil = new JwtUtil(configuration);
         }
 
         /// <summary>
@@ -83,8 +87,9 @@ namespace IeltsTestWeb.Controllers
                 var role = await database.Roles.FindAsync(account.RoleId);
                 if (role != null)
                 {
-                    var token = GenerateJwtToken(account.Email, role.Name);
-                    return Ok(token);
+                    var accessToken = jwtUtil.GenerateAccessToken(account.AccountId, account.Email, role.Name);
+                    var refreshToken = jwtUtil.GenerateRefreshToken(account.AccountId);
+                    return Ok(new {accessToken = accessToken, refreshToken = refreshToken});
                 }
                 return BadRequest("Can't find user's role");
             }
@@ -100,31 +105,6 @@ namespace IeltsTestWeb.Controllers
         public IActionResult TestAuthentication()
         {
             return Ok("This is ADMIN DATA");
-        }
-        private string GenerateJwtToken(string username, string role)
-        {
-            // Create basic claims 
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            // Add claim for role
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var tokenDescriptor = new JwtSecurityToken(
-                issuer: configuration["Jwt:Issuer"],
-                audience: configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(3),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
         }
 
         /// <summary>
