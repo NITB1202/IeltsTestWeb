@@ -9,7 +9,7 @@ public partial class QuestionList
 
     public string QlistType { get; set; } = null!;
 
-    public string Content { get; set; } = null!;
+    public string? Content { get; set; }
 
     public int Qnum { get; set; }
 

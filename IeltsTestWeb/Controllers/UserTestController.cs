@@ -1,6 +1,7 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
+using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,27 +18,6 @@ namespace IeltsTestWeb.Controllers
         public UserTestController(ieltsDbContext database)
         {
             this.database = database;
-        }
-        private static UserTestResponseModel UserTestToResponseModel(UserTest model)
-        {
-            return new UserTestResponseModel
-            {
-                Id = model.UtestId,
-                AccountId = model.AccountId,
-                Name = model.Name,
-                DateCreate = model.DateCreate,
-                TestType = model.TestType,
-                TestSkill = model.TestSkill
-            };
-        }
-        private static DetailResponseModel DetailToResponseModel(UserTestDetail model)
-        {
-            return new DetailResponseModel
-            {
-                Id = model.TdetailId,
-                TestId = model.UtestId,
-                SectionId = model.SectionId
-            };
         }
 
         /// <summary>
@@ -66,7 +46,7 @@ namespace IeltsTestWeb.Controllers
             database.UserTests.Add(test);
             await database.SaveChangesAsync();
 
-            return Ok(UserTestToResponseModel(test));
+            return Ok(Mapper.UserTestToResponseModel(test));
         }
 
         /// <summary>
@@ -265,7 +245,7 @@ namespace IeltsTestWeb.Controllers
         public async Task<IActionResult> GetAllUserTest(int id)
         {
             var tests = database.UserTests.Where(test => test.AccountId == id);
-            var responseList = await database.UserTests.Select(test => UserTestToResponseModel(test)).ToListAsync();
+            var responseList = await database.UserTests.Select(test => Mapper.UserTestToResponseModel(test)).ToListAsync();
             return Ok(responseList);
         }
 
@@ -276,7 +256,7 @@ namespace IeltsTestWeb.Controllers
         public async Task<ActionResult<IEnumerable<DetailResponseModel>>> GetAllTestDetails(int id)
         {
             var details = database.UserTestDetails.Where(detail => detail.UtestId == id);
-            var responseList = await details.Select(detail => DetailToResponseModel(detail)).ToListAsync();
+            var responseList = await details.Select(detail => Mapper.DetailToResponseModel(detail)).ToListAsync();
             return Ok(responseList);
         }
 
@@ -298,7 +278,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return (UserTestToResponseModel(test));
+            return (Mapper.UserTestToResponseModel(test));
         }
 
         /// <summary>
@@ -318,7 +298,7 @@ namespace IeltsTestWeb.Controllers
                 (testSkill == null || testSkill == test.TestSkill)
             );
 
-            var responseList = tests.Select(test => UserTestToResponseModel(test));
+            var responseList = tests.Select(test => Mapper.UserTestToResponseModel(test));
 
             return Ok(responseList);
         }

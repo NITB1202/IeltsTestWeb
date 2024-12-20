@@ -1,14 +1,11 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
-using System.Linq;
 
 namespace IeltsTestWeb.Utils
 {
     public class ResourcesManager
     {
-        private static int maxWidth = 500;
-        private static int maxHeight = 500;
         public static string uploadDir { get; } = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
         public static string avatarsDir { get; } = Path.Combine(uploadDir, "images", "avatars");
         public static string soundsDir { get; } = Path.Combine(uploadDir, "sounds");
@@ -47,7 +44,7 @@ namespace IeltsTestWeb.Utils
 
             return false;
         }
-        public static async Task SaveImage(IFormFile file, string filePath)
+        public static async Task SaveImage(IFormFile file, string filePath, int maxWidth = 500, int maxHeight = 500)
         {
             using (var image = Image.Load(file.OpenReadStream()))
             {

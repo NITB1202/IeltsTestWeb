@@ -59,7 +59,7 @@ CREATE TABLE ReadingSection(
 CREATE TABLE QuestionList(
     qlist_id INT PRIMARY KEY AUTO_INCREMENT,
     qlist_type ENUM('multiple_choice','matching','true_false','complete','diagram') NOT NULL,
-    content VARCHAR(1000) NOT NULL, 
+    content VARCHAR(1000), 
     qnum INT NOT NULL
 );
 

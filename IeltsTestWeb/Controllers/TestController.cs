@@ -1,10 +1,9 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
+using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Security.Principal;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -31,19 +30,6 @@ namespace IeltsTestWeb.Controllers
 
             return false;
         }
-        private static TestResponseModel TestToResponseModel(Test model)
-        {
-            return new TestResponseModel
-            {
-                TestId = model.TestId,
-                TestType = model.TestType,
-                TestSkill = model.TestSkill,
-                Name = model.Name,
-                MonthEdition = model.MonthEdition,
-                YearEdition = model.YearEdition,
-                UserCompletedNum = model.UserCompletedNum
-            };
-        }
 
         /// <summary>
         /// Get all tests in the system.
@@ -52,7 +38,7 @@ namespace IeltsTestWeb.Controllers
         public async Task<ActionResult<IEnumerable<TestResponseModel>>> GetAllTests()
         {
             var tests = await database.Tests.ToListAsync();
-            var responseList = tests.Select(test => TestToResponseModel(test)).ToList();
+            var responseList = tests.Select(test => Mapper.TestToResponseModel(test)).ToList();
             return Ok(responseList);
         }
         
@@ -67,7 +53,7 @@ namespace IeltsTestWeb.Controllers
             if (test == null)
                 return NotFound("Can't find test with id " + id);
 
-            return Ok(TestToResponseModel(test));
+            return Ok(Mapper.TestToResponseModel(test));
         }
         
         /// <summary>
@@ -93,7 +79,7 @@ namespace IeltsTestWeb.Controllers
 
             database.Tests.Add(test);
             await database.SaveChangesAsync();
-            return Ok(TestToResponseModel(test));
+            return Ok(Mapper.TestToResponseModel(test));
         }
 
         /// <summary>
@@ -131,7 +117,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return Ok(TestToResponseModel(test));
+            return Ok(Mapper.TestToResponseModel(test));
         }
 
         /// <summary>
@@ -150,7 +136,7 @@ namespace IeltsTestWeb.Controllers
                 (yearEdition == null || yearEdition == test.YearEdition)
             );
 
-            var responseList = tests.Select(test => TestToResponseModel(test));
+            var responseList = tests.Select(test => Mapper.TestToResponseModel(test));
 
             return Ok(responseList);
         }

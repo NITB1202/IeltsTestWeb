@@ -1,10 +1,9 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
-using Microsoft.AspNetCore.Http;
+using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -17,31 +16,6 @@ namespace IeltsTestWeb.Controllers
         public ResultController(ieltsDbContext database)
         {
             this.database = database;
-        }
-        private static ResultResponseModel ResultToResponseModel(Result model)
-        {
-            return new ResultResponseModel
-            {
-                ResultId = model.ResultId,
-                AccountId = model.AccountId,
-                TestId = model.TestId,
-                TestAccess = model.TestAccess,
-                DateMake = model.DateMake,
-                CompleteTime = model.CompleteTime,
-                Score = model.Score
-            };
-        }
-        private static ResultDetailResponseModel ResultDetailToResponseModel(ResultDetail model)
-        {
-            return new ResultDetailResponseModel
-            {
-                DetailId = model.DetailId,
-                ResultId = model.ResultId,
-                QuestionOrder = model.QuestionOrder,
-                QuestionId = model.QuestionId,
-                UserAnswer = model.UserAnswer,
-                QuestionState = model.QuestionState
-            };
         }
 
         /// <summary>
@@ -123,7 +97,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return Ok(ResultToResponseModel(result));
+            return Ok(Mapper.ResultToResponseModel(result));
         }
 
         /// <summary>
@@ -167,7 +141,7 @@ namespace IeltsTestWeb.Controllers
             database.ResultDetails.Add(detail);
             await database.SaveChangesAsync();
 
-            return Ok(ResultDetailToResponseModel(detail));
+            return Ok(Mapper.ResultDetailToResponseModel(detail));
         }
 
         /// <summary>
@@ -177,7 +151,7 @@ namespace IeltsTestWeb.Controllers
         public async Task<ActionResult<IEnumerable<ResultResponseModel>>> GetAllResults(int id)
         {
             var results = database.Results.Where(result => result.AccountId == id);
-            var responseList = await results.Select(result => ResultToResponseModel(result)).ToListAsync();
+            var responseList = await results.Select(result => Mapper.ResultToResponseModel(result)).ToListAsync();
             return Ok(responseList);
         }
 
@@ -192,7 +166,7 @@ namespace IeltsTestWeb.Controllers
             if (result == null)
                 return NotFound("Can't find result with id " + id);
 
-            return Ok(ResultToResponseModel(result));
+            return Ok(Mapper.ResultToResponseModel(result));
         }
 
         /// <summary>
@@ -203,7 +177,7 @@ namespace IeltsTestWeb.Controllers
         {
             var details = database.ResultDetails.Where(detail => detail.ResultId == id);
             var responseList = await details
-                .Select(detail => ResultDetailToResponseModel(detail))
+                .Select(detail => Mapper.ResultDetailToResponseModel(detail))
                 .ToListAsync();
 
             responseList = responseList.OrderBy(detail => detail.QuestionOrder).ToList();
@@ -265,7 +239,7 @@ namespace IeltsTestWeb.Controllers
                 }
             }
 
-            var responseList = results.Select(result => ResultToResponseModel(result));
+            var responseList = results.Select(result => Mapper.ResultToResponseModel(result));
 
             return Ok(responseList);
         }

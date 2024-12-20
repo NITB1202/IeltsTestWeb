@@ -19,28 +19,6 @@ namespace IeltsTestWeb.Controllers
         {
             this.database = database;
         }
-        private static ReadingSectionResponseModel ReadingSectionToResponseModel(ReadingSection model)
-        {
-            return new ReadingSectionResponseModel
-            {
-                Id = model.RsectionId,
-                ImageLink = model.ImageLink,
-                Title = model.Title,
-                Content = model.Content,
-                TestId = model.TestId
-            };
-        }
-        private static ListeningSectionResponseModel ListeningSectionToResponseModel(ListeningSection model)
-        {
-            return new ListeningSectionResponseModel
-            {
-                Id = model.LsectionId,
-                SectionOrder = model.SectionOrder,
-                TimeStamp = model.TimeStamp,
-                Transcript = model.Transcript,
-                SoundId = model.SoundId
-            };
-        }
 
         /// <summary>
         /// Create a new reading section for the reading test.
@@ -77,7 +55,7 @@ namespace IeltsTestWeb.Controllers
             database.ReadingSections.Add(section);
             await database.SaveChangesAsync();
 
-            return Ok(ReadingSectionToResponseModel(section));
+            return Ok(Mapper.ReadingSectionToResponseModel(section));
         }
 
         /// <summary>
@@ -116,7 +94,7 @@ namespace IeltsTestWeb.Controllers
             database.ListeningSections.Add(section);
             await database.SaveChangesAsync();
 
-            return Ok(ListeningSectionToResponseModel(section));
+            return Ok(Mapper.ListeningSectionToResponseModel(section));
         }
 
         /// <summary>
@@ -133,7 +111,7 @@ namespace IeltsTestWeb.Controllers
             if(test.TestSkill == "reading")
             {
                 var sections = database.ReadingSections.Where(s => s.TestId == id);
-                var responseList = await sections.Select(s => ReadingSectionToResponseModel(s)).ToListAsync();
+                var responseList = await sections.Select(s => Mapper.ReadingSectionToResponseModel(s)).ToListAsync();
                 var questionLists = await database.QuestionLists.Include(ql => ql.Rsections).ToListAsync();
 
                 foreach(ReadingSectionResponseModel section in responseList) 
@@ -162,7 +140,7 @@ namespace IeltsTestWeb.Controllers
                     .FirstOrDefaultAsync();
 
                 var sections = database.ListeningSections.Where(s => s.SoundId == soundId);
-                var responseList = await sections.Select(s => ListeningSectionToResponseModel(s)).ToListAsync();
+                var responseList = await sections.Select(s => Mapper.ListeningSectionToResponseModel(s)).ToListAsync();
                 var questionLists = await database.QuestionLists.Include(ql => ql.Lsections).ToListAsync();
 
                 foreach(ListeningSectionResponseModel section in responseList) 
@@ -202,7 +180,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return Ok(ReadingSectionToResponseModel(section));
+            return Ok(Mapper.ReadingSectionToResponseModel(section));
         }
 
         /// <summary>
@@ -219,7 +197,7 @@ namespace IeltsTestWeb.Controllers
             if (request.TimeStamp != null) section.TimeStamp = (TimeOnly)request.TimeStamp;
             if (request.Transcript != null) section.Transcript = request.Transcript;
 
-            return Ok(ListeningSectionToResponseModel(section));
+            return Ok(Mapper.ListeningSectionToResponseModel(section));
         }
 
         /// <summary>
@@ -244,7 +222,7 @@ namespace IeltsTestWeb.Controllers
             var fileName = $"section_{id}{fileExtension}";
             var filePath = Path.Combine(ResourcesManager.sectionsDir, fileName);
 
-            await ResourcesManager.SaveImage(file, filePath);
+            await ResourcesManager.SaveImage(file, filePath, 1200, 1200);
 
             var relativePath = ResourcesManager.GetRelativePath(filePath);
             section.ImageLink = relativePath;
@@ -252,6 +230,57 @@ namespace IeltsTestWeb.Controllers
 
             var url = $"{Request.Scheme}://{Request.Host}{relativePath}";
             return Ok(url);
+        }
+
+        /// <summary>
+        /// Get all the test section details.
+        /// </summary>
+        [HttpGet("Details/{id}")]
+        public async Task<ActionResult<ReadingSectionDetailsResponseModel>> GetReadingTestDetails(int id)
+        {
+            var readingSections = await database.ReadingSections.Where(section => section.TestId == id).ToListAsync();
+            var responses = new List<ReadingSectionDetailsResponseModel>();
+
+            if (readingSections == null)
+                return NotFound("No section found with test id " + id);
+
+            foreach (var section in readingSections)
+            {
+                ReadingSectionDetailsResponseModel response = new ReadingSectionDetailsResponseModel();
+                response.Section = Mapper.ReadingSectionToResponseModel(section);
+                response.QuestionLists = new List<QuestionListDetailResponseModel>();
+
+                var questionLists = await database.QuestionLists
+                                    .Include(ql => ql.Rsections)
+                                    .Where(ql => ql.Rsections.Any(rs => rs.RsectionId == section.RsectionId))
+                                    .ToListAsync();
+
+                foreach (var questionList in questionLists)
+                {
+                    QuestionListDetailResponseModel qlResponse = new QuestionListDetailResponseModel();
+                    qlResponse.questionList = Mapper.QuestionListToResponseModel(questionList);
+                    qlResponse.questions = new List<QuestionDetailsResponseModel>();
+
+                    var questions = await database.Questions.Where(q => q.QlistId == questionList.QlistId).ToListAsync();
+                    foreach ( var question in questions)
+                    {
+                        QuestionDetailsResponseModel questionResponse = new QuestionDetailsResponseModel();
+                        questionResponse.Question = Mapper.QuestionToResponseModel(question);
+
+                        var explanation = await database.Explanations.FirstOrDefaultAsync(e => e.QuestionId == question.QuestionId);
+                        questionResponse.Explanation = explanation != null? Mapper.ExplanationToResponseModel(explanation) : new ExplanationResponseModel();
+
+                        qlResponse.questions.Add(questionResponse);
+                    }
+
+
+                    response.QuestionLists.Add(qlResponse);
+                }
+
+                responses.Add(response);
+            }
+
+            return Ok(responses);
         }
     }
 }

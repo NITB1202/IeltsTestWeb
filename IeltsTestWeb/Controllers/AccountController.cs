@@ -20,18 +20,6 @@ namespace IeltsTestWeb.Controllers
         {
             this.database = database;
         }
-        private static AccountResponseModel AccountToResponseModel(Account account)
-        {
-            return new AccountResponseModel
-            {
-                AccountId = account.AccountId,
-                Email = account.Email,
-                RoleId = account.RoleId,
-                AvatarLink = account.AvatarLink,
-                Goal = account.Goal,
-                IsActive = account.IsActive
-            };
-        }
 
         /// <summary>
         /// Get all accounts in the system.
@@ -40,7 +28,7 @@ namespace IeltsTestWeb.Controllers
         public async Task<ActionResult<IEnumerable<AccountResponseModel>>> GetAllAcounts()
         {
             var accounts = await database.Accounts.ToListAsync();
-            var responseList = accounts.Select(account => AccountToResponseModel(account)).ToList();
+            var responseList = accounts.Select(account => Mapper.AccountToResponseModel(account)).ToList();
             return Ok(responseList);
         }
 
@@ -64,7 +52,7 @@ namespace IeltsTestWeb.Controllers
 
             database.Accounts.Add(account);
             await database.SaveChangesAsync();
-            return Ok(AccountToResponseModel(account));
+            return Ok(Mapper.AccountToResponseModel(account));
         }
 
         /// <summary>
@@ -78,7 +66,7 @@ namespace IeltsTestWeb.Controllers
             if(account == null)
                 return NotFound("Can't find account with id "+ id);
 
-            return Ok(AccountToResponseModel(account));
+            return Ok(Mapper.AccountToResponseModel(account));
         }
 
         /// <summary>
@@ -93,7 +81,7 @@ namespace IeltsTestWeb.Controllers
                 (roleId == null || account.RoleId == roleId) &&
                 (!isActive.HasValue || account.IsActive == isActive)
             );
-            var responseList = accounts.Select(account => AccountToResponseModel(account)).ToList();
+            var responseList = accounts.Select(account => Mapper.AccountToResponseModel(account)).ToList();
             return Ok(responseList);
         }
 
@@ -180,7 +168,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return Ok(AccountToResponseModel(account));
+            return Ok(Mapper.AccountToResponseModel(account));
         }
     }
 }

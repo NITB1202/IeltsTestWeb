@@ -1,6 +1,7 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
+using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,15 +17,6 @@ namespace IeltsTestWeb.Controllers
         public ExplanationController(ieltsDbContext database)
         {
             this.database = database;
-        }
-        private static ExplanationResponseModel ExplanationToResponseModel(Explanation model)
-        {
-            return new ExplanationResponseModel
-            {
-                ExId = model.ExId,
-                Content = model.Content,
-                QuestionId = model.QuestionId
-            };
         }
 
         /// <summary>
@@ -51,7 +43,7 @@ namespace IeltsTestWeb.Controllers
             database.Explanations.Add(ex);
             await database.SaveChangesAsync();
 
-            return Ok(ExplanationToResponseModel(ex));
+            return Ok(Mapper.ExplanationToResponseModel(ex));
         }
         
         /// <summary>
@@ -65,7 +57,7 @@ namespace IeltsTestWeb.Controllers
             if (ex == null)
                 return NotFound("Can't find the explanation for the question with id " + id);
 
-            return Ok(ExplanationToResponseModel(ex));
+            return Ok(Mapper.ExplanationToResponseModel(ex));
         }
         
         /// <summary>
@@ -83,7 +75,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return Ok(ExplanationToResponseModel(ex));
+            return Ok(Mapper.ExplanationToResponseModel(ex));
         }
     }
 }

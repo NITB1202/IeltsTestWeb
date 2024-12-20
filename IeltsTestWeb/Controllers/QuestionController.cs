@@ -1,6 +1,7 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
+using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,17 +18,6 @@ namespace IeltsTestWeb.Controllers
         public QuestionController(ieltsDbContext database)
         {
             this.database = database;
-        }
-        private static QuestionResponseModel QuestionToResponseModel(Question model)
-        {
-            return new QuestionResponseModel
-            {
-                QuestionId = model.QuestionId,
-                QlistId = model.QlistId,
-                Content = model.Content,
-                ChoiceList = model.ChoiceList,
-                Answer = model.Answer
-            };
         }
         
         /// <summary>
@@ -57,7 +47,7 @@ namespace IeltsTestWeb.Controllers
             
             await database.SaveChangesAsync();
 
-            return Ok(QuestionToResponseModel(question));
+            return Ok(Mapper.QuestionToResponseModel(question));
         }
 
         /// <summary>
@@ -69,7 +59,7 @@ namespace IeltsTestWeb.Controllers
         public async Task<ActionResult<IEnumerable<QuestionResponseModel>>> GetQuestionListQuestion(int id)
         {
             var questions = database.Questions.Where(q => q.QlistId == id);
-            var responeList = await questions.Select(q => QuestionToResponseModel(q)).ToListAsync();
+            var responeList = await questions.Select(q => Mapper.QuestionToResponseModel(q)).ToListAsync();
             return Ok(responeList);
         }
         
@@ -102,7 +92,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return Ok(QuestionToResponseModel(question));
+            return Ok(Mapper.QuestionToResponseModel(question));
         }
     }
 }

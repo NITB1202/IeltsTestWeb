@@ -19,16 +19,6 @@ namespace IeltsTestWeb.Controllers
         {
             this.database = database;
         }
-        private static QuestionListResponseModel QuestionListToResponseModel(QuestionList model)
-        {
-            return new QuestionListResponseModel
-            {
-                Id = model.QlistId,
-                Type = model.QlistType,
-                Content = model.Content,
-                Qnum = model.Qnum
-            };
-        }
 
         /// <summary>
         /// Create new question list.
@@ -65,7 +55,7 @@ namespace IeltsTestWeb.Controllers
 
             await database.SaveChangesAsync();
 
-            return Ok(QuestionListToResponseModel(qlist));
+            return Ok(Mapper.QuestionListToResponseModel(qlist));
         }
 
         /// <summary>
@@ -183,7 +173,7 @@ namespace IeltsTestWeb.Controllers
                 }
             }
 
-            return Ok(responseList.Select(qlist => QuestionListToResponseModel(qlist)).ToList());
+            return Ok(responseList.Select(qlist => Mapper.QuestionListToResponseModel(qlist)).ToList());
         }
 
         /// <summary>
