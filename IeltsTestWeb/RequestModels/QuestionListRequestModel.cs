@@ -15,8 +15,7 @@ namespace IeltsTestWeb.RequestModels
         [QuestionType]
         public string QuestionListType { get; set; } = null!;
 
-        [Required(ErrorMessage = "Content is required.")]
-        public string Content { get; set; } = null!;
+        public string? Content { get; set; }
     }
 
     public class QuestionTypeAttribute : ValidationAttribute

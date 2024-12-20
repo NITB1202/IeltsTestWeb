@@ -249,6 +249,7 @@ namespace IeltsTestWeb.Controllers
                 ReadingSectionDetailsResponseModel response = new ReadingSectionDetailsResponseModel();
                 response.Section = Mapper.ReadingSectionToResponseModel(section);
                 response.QuestionLists = new List<QuestionListDetailResponseModel>();
+                response.Section.QuestionNum = 0;
 
                 var questionLists = await database.QuestionLists
                                     .Include(ql => ql.Rsections)
@@ -260,6 +261,7 @@ namespace IeltsTestWeb.Controllers
                     QuestionListDetailResponseModel qlResponse = new QuestionListDetailResponseModel();
                     qlResponse.questionList = Mapper.QuestionListToResponseModel(questionList);
                     qlResponse.questions = new List<QuestionDetailsResponseModel>();
+                    response.Section.QuestionNum += questionList.Qnum;
 
                     var questions = await database.Questions.Where(q => q.QlistId == questionList.QlistId).ToListAsync();
                     foreach ( var question in questions)
