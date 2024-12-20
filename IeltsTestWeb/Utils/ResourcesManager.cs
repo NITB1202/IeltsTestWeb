@@ -1,6 +1,8 @@
-﻿using SixLabors.ImageSharp;
+﻿using NPOI.XWPF.UserModel;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
+using System.Text;
 
 namespace IeltsTestWeb.Utils
 {
@@ -110,6 +112,62 @@ namespace IeltsTestWeb.Utils
             else if (score <= 34) return 8.0;
             else if (score <= 36) return 8.5;
             else return 9.0;
+        }
+        public async static Task<string> ReadTextFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0) return "";
+
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            try
+            {
+                if (fileExtension == ".txt")
+                {
+                    using (var streamReader = new StreamReader(file.OpenReadStream()))
+                    {
+                        string content = await streamReader.ReadToEndAsync();
+
+                        content = content.Replace(Environment.NewLine, "<br>")
+                                         .Replace("\n", "<br>")
+                                         .Replace("\r", "<br>");
+
+                        return content;
+                    }
+                }
+                else if (fileExtension == ".docx")
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await file.CopyToAsync(memoryStream);
+
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        try
+                        {
+                            using (var doc = new XWPFDocument(memoryStream))
+                            {
+                                StringBuilder content = new StringBuilder();
+                                foreach (var paragraph in doc.Paragraphs)
+                                {
+                                    content.Append(paragraph.Text).Append("<br>");
+                                }
+                                return content.ToString();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            return $"Error reading DOCX file: {ex.Message}";
+                        }
+                    }
+                }
+                else
+                {
+                    return "Unsupported file format. Please upload a .txt or .docx file.";
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Error reading file: {ex.Message}";
+            }
         }
     }
 }

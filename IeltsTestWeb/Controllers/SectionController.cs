@@ -5,7 +5,9 @@ using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NPOI.XWPF.UserModel;
 using System.Security.Principal;
+using System.Text;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -283,6 +285,17 @@ namespace IeltsTestWeb.Controllers
             }
 
             return Ok(responses);
+        }
+
+        /// <summary>
+        /// Convert txt and docx file to formated string
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        [HttpPost("Content")]
+        public async Task<ActionResult<string>> ReadContentFile(IFormFile file)
+        {
+            return Ok(await ResourcesManager.ReadTextFile(file));
         }
     }
 }

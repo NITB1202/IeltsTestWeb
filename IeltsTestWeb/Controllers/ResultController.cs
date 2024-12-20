@@ -4,6 +4,7 @@ using IeltsTestWeb.ResponseModels;
 using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NPOI.OpenXmlFormats.Dml;
 
 namespace IeltsTestWeb.Controllers
 {
@@ -242,6 +243,49 @@ namespace IeltsTestWeb.Controllers
             var responseList = results.Select(result => Mapper.ResultToResponseModel(result));
 
             return Ok(responseList);
+        }
+
+        /// <summary>
+        /// Get user's score.
+        /// </summary>
+        [HttpPost("Full")]
+        public async Task<ActionResult<int>> CreateListResultDetails([FromBody] ListResultDetailsRequestModel request)
+        {
+            var result = await database.Results.FindAsync(request.resultId);
+            if (result == null)
+                return NotFound("Can't find result with id " + request.resultId);
+
+            for(int i = 0; i< request.questionIds.Count; i++)
+            {
+                var questionId = request.questionIds[i];
+                var userAnswer = request.userAnswers[i + 1];
+
+                var question = await database.Questions.FindAsync(questionId);
+                if (question == null)
+                    return NotFound("Can't find question with id" + questionId);
+
+                string state = question.Answer.ToLower().Trim().Equals(userAnswer.ToLower().Trim()) ? "right" : "wrong";
+
+                if(state == "right")
+                {
+                    result.Score += 1;
+                }
+
+                var detail = new ResultDetail
+                {
+                    ResultId = request.resultId,
+                    QuestionOrder = i + 1,
+                    QuestionId = questionId,
+                    UserAnswer = userAnswer,
+                    QuestionState = state,
+                };
+
+                database.ResultDetails.Add(detail);
+            }
+
+            await database.SaveChangesAsync();
+
+            return Ok(result.Score);
         }
     }
 }
