@@ -255,37 +255,36 @@ namespace IeltsTestWeb.Controllers
             if (result == null)
                 return NotFound("Can't find result with id " + request.resultId);
 
-            for(int i = 0; i< request.questionIds.Count; i++)
+            if(request.userAnswers != null)
             {
-                var questionId = request.questionIds[i];
-                var userAnswer = request.userAnswers[i + 1];
-
-                var question = await database.Questions.FindAsync(questionId);
-                if (question == null)
-                    return NotFound("Can't find question with id" + questionId);
-
-                string state = question.Answer.ToLower().Trim().Equals(userAnswer.ToLower().Trim()) ? "right" : "wrong";
-
-                if(state == "right")
+                foreach(var answer in request.userAnswers)
                 {
-                    result.Score += 1;
+                    var questionId = request.questionIds[answer.Key - 1];
+                    var question = await database.Questions.FindAsync(questionId);
+
+                    if (question == null)
+                        return NotFound("Can't find question with id" + questionId);
+
+                    string state = question.Answer.ToLower().Trim().Equals(answer.Value.ToLower().Trim()) ? "right" : "wrong";
+
+                    if (state == "right") result.Score += 1;
+
+                    var detail = new ResultDetail
+                    {
+                        ResultId = request.resultId,
+                        QuestionOrder = answer.Key,
+                        QuestionId = questionId,
+                        UserAnswer = answer.Value,
+                        QuestionState = state,
+                    };
+
+                    database.ResultDetails.Add(detail);
                 }
 
-                var detail = new ResultDetail
-                {
-                    ResultId = request.resultId,
-                    QuestionOrder = i + 1,
-                    QuestionId = questionId,
-                    UserAnswer = userAnswer,
-                    QuestionState = state,
-                };
-
-                database.ResultDetails.Add(detail);
+                await database.SaveChangesAsync();
             }
 
-            await database.SaveChangesAsync();
-
-            return Ok(result.Score);
+            return Ok(new { score = result.Score, band = ResourcesManager.ConvertScoreToBand(result.Score) });
         }
     }
 }
