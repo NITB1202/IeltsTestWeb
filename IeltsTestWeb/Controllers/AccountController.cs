@@ -2,15 +2,13 @@
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
 using IeltsTestWeb.Utils;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("account")]
     [ApiController]
     [Produces("application/json")]
     public class AccountController : ControllerBase
@@ -72,7 +70,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Find all accounts that match the query parameters.
         /// </summary>
-        [HttpGet("Match")]
+        [HttpGet("match")]
         public ActionResult<IEnumerable<AccountResponseModel>> FindAccountsMatch(
             [FromQuery] string? email, [FromQuery] int? roleId, [FromQuery] bool? isActive)
         {
@@ -88,7 +86,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Deactivate a specific account.
         /// </summary>
-        [HttpPatch("Deactivate/{id}")]
+        [HttpPatch("deactivate/{id}")]
         public async Task<IActionResult> DeactivateAccount(int id)
         {
             var account = await database.Accounts.FindAsync(id);
@@ -102,7 +100,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Upload a profile picture for an account.
         /// </summary>
-        [HttpPost("Image/{id}")]
+        [HttpPost("image/{id}")]
         public async Task<IActionResult> UpdateProfileImage(int id, IFormFile file)
         {
             var account = await database.Accounts.FindAsync(id);
@@ -169,6 +167,18 @@ namespace IeltsTestWeb.Controllers
             await database.SaveChangesAsync();
 
             return Ok(Mapper.AccountToResponseModel(account));
+        }
+
+        /// <summary>
+        /// Get account profile picture.
+        /// </summary>
+        [HttpGet("image/{id}")]
+        public async Task<ActionResult<string>> GetUserAvatar(int id)
+        {
+            var account = await database.Accounts.FindAsync(id);
+            if (account == null)
+                return NotFound("Can't find account with id " + id);
+            return Ok(account.AvatarLink);
         }
     }
 }

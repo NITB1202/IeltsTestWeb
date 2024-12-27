@@ -1,13 +1,11 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Principal;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("sound")]
     [ApiController]
     [Produces("application/json")]
     public class SoundController : ControllerBase
@@ -83,7 +81,7 @@ namespace IeltsTestWeb.Controllers
             if (sound == null)
                 return NotFound("Can't find sound for test with " + id);
 
-            return Ok(sound.SoundLink);
+            return Ok(new {id = sound.SoundId, url = sound.SoundLink});
         }
     }
 }

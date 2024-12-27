@@ -4,11 +4,10 @@ using IeltsTestWeb.ResponseModels;
 using IeltsTestWeb.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NPOI.OpenXmlFormats.Dml;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("result")]
     [ApiController]
     [Produces("application/json")]
     public class ResultController : ControllerBase
@@ -104,7 +103,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Create result details.
         /// </summary>
-        [HttpPost("Detail")]
+        [HttpPost("detail")]
         public async Task<ActionResult<ResultDetailResponseModel>> CreateNewDetail([FromBody] ResultDetailRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -148,7 +147,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get all results belong to the account.
         /// </summary>
-        [HttpGet("Account/{id}")]
+        [HttpGet("account/{id}")]
         public async Task<ActionResult<IEnumerable<ResultResponseModel>>> GetAllResults(int id)
         {
             var results = database.Results.Where(result => result.AccountId == id);
@@ -173,7 +172,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get all result details by result id.
         /// </summary>
-        [HttpGet("Detail/{id}")]
+        [HttpGet("detail/{id}")]
         public async Task<ActionResult<IEnumerable<ResultDetailResponseModel>>> GetAllDetails(int id)
         {
             var details = database.ResultDetails.Where(detail => detail.ResultId == id);
@@ -188,7 +187,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Find all results that match the query parameters.
         /// </summary>
-        [HttpGet("Match")]
+        [HttpGet("match")]
         public async Task<ActionResult<IEnumerable<ResultResponseModel>>> GetResultsMatch(
             [FromQuery] string? testName, [FromQuery] string? testAccess, [FromQuery] string? testType,
             [FromQuery] string? testSkill, [FromQuery] int? accountId)
@@ -248,7 +247,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get user's score.
         /// </summary>
-        [HttpPost("Full")]
+        [HttpPost("full")]
         public async Task<ActionResult<int>> CreateListResultDetails([FromBody] ListResultDetailsRequestModel request)
         {
             var result = await database.Results.FindAsync(request.resultId);

@@ -2,13 +2,12 @@
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
 using IeltsTestWeb.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("explanation")]
     [ApiController]
     [Produces("application/json")]
     public class ExplanationController : ControllerBase

@@ -1,11 +1,10 @@
 ﻿using IeltsTestWeb.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("constant")]
     [ApiController]
     [Produces("application/json")]
     public class ConstantController : ControllerBase

@@ -2,16 +2,12 @@
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
 using IeltsTestWeb.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NPOI.XWPF.UserModel;
-using System.Security.Principal;
-using System.Text;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("section")]
     [ApiController]
     [Produces("application/json")]
     public class SectionController : ControllerBase
@@ -25,7 +21,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Create a new reading section for the reading test.
         /// </summary>
-        [HttpPost("Reading")]
+        [HttpPost("reading")]
         public async Task<ActionResult<ReadingSectionResponseModel>> CreateReadingSection([FromBody] ReadingSectionRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -63,7 +59,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Create a new listening section for the sound.
         /// </summary>
-        [HttpPost("Listening")]
+        [HttpPost("listening")]
         public async Task<ActionResult<ListeningSectionResponseModel>> CreateListeningSection([FromBody] ListeningSectionRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -169,7 +165,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Update the reading section information.
         /// </summary>
-        [HttpPatch("Reading/{id}")]
+        [HttpPatch("reading/{id}")]
         public async Task<ActionResult<ReadingSectionResponseModel>> UpdateReadingSection(int id, [FromBody] UpdateRSectionRequestModel request)
         {
             var section = await database.ReadingSections.FindAsync(id);
@@ -188,7 +184,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Update the listening section information.
         /// </summary>
-        [HttpPatch("Listening/{id}")]
+        [HttpPatch("listening/{id}")]
         public async Task<ActionResult<ListeningSectionResponseModel>> UpdateListeningSection(int id, [FromBody] UpdateLSectionRequestModel request)
         {
             var section = await database.ListeningSections.FindAsync(id);
@@ -205,7 +201,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Upload an image for the reading section.
         /// </summary>
-        [HttpPost("Image/{id}")]
+        [HttpPost("image/{id}")]
         public async Task<IActionResult> UploadReadingSectionImage(int id, IFormFile file)
         {
             var section = await database.ReadingSections.FindAsync(id);
@@ -235,9 +231,9 @@ namespace IeltsTestWeb.Controllers
         }
 
         /// <summary>
-        /// Get all the test section details.
+        /// Get all the reading test sections details.
         /// </summary>
-        [HttpGet("Details/{id}")]
+        [HttpGet("details/reading/{id}")]
         public async Task<ActionResult<ReadingSectionDetailsResponseModel>> GetReadingTestDetails(int id)
         {
             var readingSections = await database.ReadingSections.Where(section => section.TestId == id).ToListAsync();
@@ -292,10 +288,62 @@ namespace IeltsTestWeb.Controllers
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
-        [HttpPost("Content")]
+        [HttpPost("content")]
         public async Task<ActionResult<string>> ReadContentFile(IFormFile file)
         {
             return Ok(await ResourcesManager.ReadTextFile(file));
+        }
+
+        /// <summary>
+        /// Get all the listening test sections details.
+        /// </summary>
+        [HttpGet("details/listening/{soundId}")]
+        public async Task<ActionResult<ListeningSectionDetailsResponseModel>> GetListeningTestDetails(int soundId)
+        {
+            var listeningSections = await database.ListeningSections.Where(section => section.SoundId == soundId).ToListAsync();
+            List<ListeningSectionDetailsResponseModel> responses = new List<ListeningSectionDetailsResponseModel>();
+
+            if(listeningSections == null)
+                return NotFound("No section found with sound id " + soundId);
+
+            foreach (var section in listeningSections)
+            {
+                ListeningSectionDetailsResponseModel response = new ListeningSectionDetailsResponseModel();
+                response.Section = Mapper.ListeningSectionToResponseModel(section);
+                response.QuestionLists = new List<QuestionListDetailResponseModel>();
+                response.Section.QuestionNum = 0;
+
+                var questionLists = await database.QuestionLists
+                                    .Include(ql => ql.Lsections)
+                                    .Where(ql => ql.Lsections.Any(ls => ls.LsectionId == section.LsectionId))
+                                    .ToListAsync();
+
+                foreach (var questionList in questionLists)
+                {
+                    QuestionListDetailResponseModel qlResponse = new QuestionListDetailResponseModel();
+                    qlResponse.questionList = Mapper.QuestionListToResponseModel(questionList);
+                    qlResponse.questions = new List<QuestionDetailsResponseModel>();
+                    response.Section.QuestionNum += questionList.Qnum;
+
+                    var questions = await database.Questions.Where(q => q.QlistId == questionList.QlistId).ToListAsync();
+                    foreach (var question in questions)
+                    {
+                        QuestionDetailsResponseModel questionResponse = new QuestionDetailsResponseModel();
+                        questionResponse.Question = Mapper.QuestionToResponseModel(question);
+
+                        var explanation = await database.Explanations.FirstOrDefaultAsync(e => e.QuestionId == question.QuestionId);
+                        questionResponse.Explanation = explanation != null ? Mapper.ExplanationToResponseModel(explanation) : new ExplanationResponseModel();
+
+                        qlResponse.questions.Add(questionResponse);
+                    }
+
+                    response.QuestionLists.Add(qlResponse);
+                }
+
+                responses.Add(response);
+            }
+
+            return Ok(responses);
         }
     }
 }

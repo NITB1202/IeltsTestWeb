@@ -1,27 +1,16 @@
 ﻿using IeltsTestWeb.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Data;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Text.RegularExpressions;
-using BCrypt.Net;
 using MimeKit;
 using IeltsTestWeb.RequestModels;
 using MailKit.Net.Smtp;
-using System.Security.Principal;
 using StackExchange.Redis;
-using Org.BouncyCastle.Asn1.Ocsp;
-using MimeKit.Tnef;
 using IeltsTestWeb.Utils;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("auth")]
     [ApiController]
     [Produces("application/json")]
     public class AuthenticationController : ControllerBase
@@ -43,7 +32,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get all roles in the system.
         /// </summary>
-        [HttpGet("Role")]
+        [HttpGet("role")]
         public async Task<ActionResult<IEnumerable<Models.Role>>> GetAllRoles()
         {
             var roleList = await database.Roles.ToListAsync();
@@ -53,7 +42,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get role by id.
         /// </summary>
-        [HttpPatch("Role/{id}")]
+        [HttpPatch("role/{id}")]
         public async Task<IActionResult> UpdateAccountRole(int id, [FromBody] int roleId)
         {
             var account = await database.Accounts.FindAsync(id);
@@ -74,7 +63,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Login to the system.
         /// </summary>
-        [HttpPost("Login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -101,7 +90,7 @@ namespace IeltsTestWeb.Controllers
         /// Test the authentication for the Admin role.
         /// </summary>
         [Authorize(Roles = "admin")]
-        [HttpGet("Test")]
+        [HttpGet("test")]
         public IActionResult TestAuthentication()
         {
             return Ok("This is ADMIN DATA");
@@ -110,7 +99,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Send verification code to a specific email.
         /// </summary>
-        [HttpPost("Code")]
+        [HttpPost("code")]
         public async Task<IActionResult> SendVerificationCode([FromBody] string email)
         {
             // Generate verification code
@@ -150,7 +139,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Verify the account.
         /// </summary>
-        [HttpPost("Verify")]
+        [HttpPost("verify")]
         public async Task<IActionResult> Verification([FromBody] VerifyRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -171,7 +160,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Reset password.
         /// </summary>
-        [HttpPost("Password")]
+        [HttpPost("password")]
         public async Task<IActionResult> ResetPassword([FromBody] LoginRequestModel request)
         {
             if (!ModelState.IsValid)

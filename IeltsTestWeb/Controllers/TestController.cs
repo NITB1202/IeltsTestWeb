@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("test")]
     [ApiController]
     [Produces("application/json")]
     public class TestController : ControllerBase
@@ -123,7 +123,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Find all tests that match the query parameters.
         /// </summary>
-        [HttpGet("Match")]
+        [HttpGet("match")]
         public ActionResult<IEnumerable<TestResponseModel>> FindTestsMatch(
             [FromQuery] string? name, [FromQuery] string? testType, [FromQuery] string? testSkill,
             [FromQuery] int? monthEdition, [FromQuery] int? yearEdition)
@@ -144,7 +144,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Validate the test before saving.
         /// </summary>
-        [HttpGet("Validate/{id}")]
+        [HttpGet("validate/{id}")]
         public async Task<ActionResult> ValidateTest(int id)
         {
             // Find test

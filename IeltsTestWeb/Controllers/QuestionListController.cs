@@ -1,15 +1,13 @@
 ﻿using IeltsTestWeb.Models;
 using IeltsTestWeb.RequestModels;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using IeltsTestWeb.Utils;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Principal;
 using IeltsTestWeb.ResponseModels;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("questionlist")]
     [ApiController]
     [Produces("application/json")]
     public class QuestionListController : ControllerBase
@@ -61,7 +59,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Upload an image file for the diagram question list.
         /// </summary>
-        [HttpPost("Image/{id}")]
+        [HttpPost("image/{id}")]
         public async Task<IActionResult> UploadDiagramImage(int id, IFormFile file)
         {
             var qlist = await database.QuestionLists.FindAsync(id);
@@ -113,7 +111,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Upload a choice list for matching question list.
         /// </summary>
-        [HttpPost("Choice/{id}")]
+        [HttpPost("choice/{id}")]
         public async Task<IActionResult> AddChoiceList(int id, [FromBody] string choice)
         {
             var qlist = await database.QuestionLists.FindAsync(id);
@@ -179,7 +177,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get diagram question list image by question list id.
         /// </summary>
-        [HttpGet("Image/{id}")]
+        [HttpGet("image/{id}")]
         public async Task<IActionResult> GetDiagramImage(int id)
         {
             var diagram = await database.DiagramQuestionLists.FirstOrDefaultAsync(d => d.QlistId == id);
@@ -193,7 +191,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get matching question list choices by question list id.
         /// </summary>
-        [HttpGet("Choice/{id}")]
+        [HttpGet("choice/{id}")]
         public async Task<IActionResult> GetChoiceList(int id)
         {
             var choice = await database.MatchQuestionLists.FirstOrDefaultAsync(q => q.QlistId == id);

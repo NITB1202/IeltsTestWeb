@@ -2,14 +2,13 @@
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
 using IeltsTestWeb.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("usertest")]
     [ApiController]
     [Produces("application/json")]
     public class UserTestController : ControllerBase
@@ -52,7 +51,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Create a reading test details featuring matching types.
         /// </summary>
-        [HttpPost("Reading")]
+        [HttpPost("reading")]
         public async Task<IActionResult> CreateReadingTestDetail(DetailRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -148,7 +147,7 @@ namespace IeltsTestWeb.Controllers
         /// Create a listening test details featuring matching types.
         /// </summary>
         /// <returns></returns>
-        [HttpPost("Listening")]
+        [HttpPost("listening")]
         public async Task<IActionResult> CreateListeningTestDetail(DetailRequestModel request)
         {
             if (!ModelState.IsValid)
@@ -252,7 +251,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get the details of the test.
         /// </summary>
-        [HttpGet("Detail/{id}")]
+        [HttpGet("detail/{id}")]
         public async Task<ActionResult<IEnumerable<DetailResponseModel>>> GetAllTestDetails(int id)
         {
             var details = database.UserTestDetails.Where(detail => detail.UtestId == id);
@@ -284,7 +283,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Find all user tests that match the query parameters.
         /// </summary>
-        [HttpGet("Match")]
+        [HttpGet("match")]
         public ActionResult<IEnumerable<UserTestResponseModel>> FindAllUserTestsMatch(
             [FromQuery] int? accountId, [FromQuery] string? name, [FromQuery] string? testType, [FromQuery] string? testSkill)
         {
@@ -301,6 +300,259 @@ namespace IeltsTestWeb.Controllers
             var responseList = tests.Select(test => Mapper.UserTestToResponseModel(test));
 
             return Ok(responseList);
+        }
+
+        /// <summary>
+        /// Get user test by id.
+        /// </summary>
+        [HttpGet("info/{id}")]
+        public async Task<ActionResult<UserTestResponseModel>> GetUserTestById(int id)
+        {
+            var test = await database.UserTests.FindAsync(id);
+            var response = test != null? Mapper.UserTestToResponseModel(test) : null;
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get full reading test.
+        /// </summary>
+        [HttpGet("reading/{id}")]
+        public async Task<ActionResult<ReadingSectionDetailsResponseModel>> GetReadingTestDetails(int id)
+        {
+            var readingSectionIds = await database.UserTestDetails
+                .Where(test => test.UtestId == id)
+                .Select(test => test.SectionId)
+                .ToListAsync();
+
+            var readingSections = new List<ReadingSection>();
+
+            foreach(var readingSectionId in readingSectionIds)
+            {
+                var readingSection = await database.ReadingSections.FindAsync(readingSectionId);
+                if (readingSection != null) readingSections.Add(readingSection);
+            }
+
+            if (readingSections.Count == 0)
+                return NotFound("No section found with test id " + id);
+
+            var responses = new List<ReadingSectionDetailsResponseModel>();
+
+            foreach (var section in readingSections)
+            {
+                ReadingSectionDetailsResponseModel response = new ReadingSectionDetailsResponseModel();
+                response.Section = Mapper.ReadingSectionToResponseModel(section);
+                response.QuestionLists = new List<QuestionListDetailResponseModel>();
+                response.Section.QuestionNum = 0;
+
+                var questionLists = await database.QuestionLists
+                                    .Include(ql => ql.Rsections)
+                                    .Where(ql => ql.Rsections.Any(rs => rs.RsectionId == section.RsectionId))
+                                    .ToListAsync();
+
+                foreach (var questionList in questionLists)
+                {
+                    QuestionListDetailResponseModel qlResponse = new QuestionListDetailResponseModel();
+                    qlResponse.questionList = Mapper.QuestionListToResponseModel(questionList);
+                    qlResponse.questions = new List<QuestionDetailsResponseModel>();
+                    response.Section.QuestionNum += questionList.Qnum;
+
+                    var questions = await database.Questions.Where(q => q.QlistId == questionList.QlistId).ToListAsync();
+                    foreach (var question in questions)
+                    {
+                        QuestionDetailsResponseModel questionResponse = new QuestionDetailsResponseModel();
+                        questionResponse.Question = Mapper.QuestionToResponseModel(question);
+
+                        var explanation = await database.Explanations.FirstOrDefaultAsync(e => e.QuestionId == question.QuestionId);
+                        questionResponse.Explanation = explanation != null ? Mapper.ExplanationToResponseModel(explanation) : new ExplanationResponseModel();
+
+                        qlResponse.questions.Add(questionResponse);
+                    }
+
+
+                    response.QuestionLists.Add(qlResponse);
+                }
+
+                responses.Add(response);
+            }
+
+            return Ok(responses);
+        }
+
+        /// <summary>
+        /// Get full listening test.
+        /// </summary>
+        [HttpGet("listening/{id}")]
+        public async Task<ActionResult<ReadingSectionDetailsResponseModel>> GetListeningTestDetails(int id)
+        {
+            var listeningSectionIds = await database.UserTestDetails
+                .Where(test => test.UtestId == id)
+                .Select(test => test.SectionId)
+                .ToListAsync();
+
+            var listeningSections = new List<ListeningSection>();
+
+            foreach (var listeningSectionId in listeningSectionIds)
+            {
+                var listeningSection = await database.ListeningSections.FindAsync(listeningSectionId);
+                if (listeningSection != null) listeningSections.Add(listeningSection);
+            }
+
+            if (listeningSections.Count == 0)
+                return NotFound("No section found with test id " + id);
+
+            List<ListeningSectionDetailsResponseModel> responses = new List<ListeningSectionDetailsResponseModel>();
+
+            foreach (var section in listeningSections)
+            {
+                ListeningSectionDetailsResponseModel response = new ListeningSectionDetailsResponseModel();
+                response.Section = Mapper.ListeningSectionToResponseModel(section);
+                response.QuestionLists = new List<QuestionListDetailResponseModel>();
+                response.Section.QuestionNum = 0;
+
+                var questionLists = await database.QuestionLists
+                                    .Include(ql => ql.Lsections)
+                                    .Where(ql => ql.Lsections.Any(ls => ls.LsectionId == section.LsectionId))
+                                    .ToListAsync();
+
+                foreach (var questionList in questionLists)
+                {
+                    QuestionListDetailResponseModel qlResponse = new QuestionListDetailResponseModel();
+                    qlResponse.questionList = Mapper.QuestionListToResponseModel(questionList);
+                    qlResponse.questions = new List<QuestionDetailsResponseModel>();
+                    response.Section.QuestionNum += questionList.Qnum;
+
+                    var questions = await database.Questions.Where(q => q.QlistId == questionList.QlistId).ToListAsync();
+                    foreach (var question in questions)
+                    {
+                        QuestionDetailsResponseModel questionResponse = new QuestionDetailsResponseModel();
+                        questionResponse.Question = Mapper.QuestionToResponseModel(question);
+
+                        var explanation = await database.Explanations.FirstOrDefaultAsync(e => e.QuestionId == question.QuestionId);
+                        questionResponse.Explanation = explanation != null ? Mapper.ExplanationToResponseModel(explanation) : new ExplanationResponseModel();
+
+                        qlResponse.questions.Add(questionResponse);
+                    }
+
+                    response.QuestionLists.Add(qlResponse);
+                }
+
+                responses.Add(response);
+            }
+
+            return Ok(responses);
+        }
+
+        /// <summary>
+        /// Delete the user test.
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUserTest(int id)
+        {
+            var test = await database.UserTests.FindAsync(id);
+            if (test == null) return NotFound("Can't find test with id " + id);
+
+            var details = await database.UserTestDetails
+                .Where(detail => detail.UtestId == id)
+                .ToListAsync();
+
+            var results = await database.Results
+                .Where(result => result.TestAccess == "private" && result.TestId == id)
+                .ToListAsync();
+
+            var resultIds = results.Select(result => result.ResultId).ToList();
+            var resultDetails = await database.ResultDetails
+                .Where(d => resultIds.Contains(d.ResultId))
+                .ToListAsync();
+
+            database.RemoveRange(resultDetails);
+            database.RemoveRange(results);
+            database.RemoveRange(details);
+            database.Remove(test);
+
+            await database.SaveChangesAsync();
+
+            return Ok("Delete successfully");
+        }
+
+        /// <summary>
+        /// Get all sections of the user test.
+        /// </summary>
+        [HttpGet("all/{id}")]
+        public async Task<IActionResult> FindAllTestSections(int id)
+        {
+            var test = await database.UserTests.FindAsync(id);
+
+            if (test == null)
+                return NotFound("Can't find test with id " + id);
+
+            var sectionIds = await database.UserTestDetails
+                .Where(detail => detail.UtestId == id)
+                .Select(detail => detail.SectionId)
+                .ToListAsync();
+
+            if (test.TestSkill == "reading")
+            {
+                var sections = new List<ReadingSection>();
+                foreach(var sectionId in sectionIds)
+                {
+                    var section = await database.ReadingSections.FindAsync(sectionId);
+                    if (section != null)
+                        sections.Add(section);
+                }
+
+                var responseList = sections.Select(s => Mapper.ReadingSectionToResponseModel(s)).ToList();
+                var questionLists = await database.QuestionLists.Include(ql => ql.Rsections).ToListAsync();
+
+                foreach (ReadingSectionResponseModel section in responseList)
+                {
+                    int questionNum = 0;
+
+                    foreach (var questionList in questionLists)
+                    {
+                        var questionListSection = questionList.Rsections.FirstOrDefault();
+
+                        if (questionListSection != null && questionListSection.RsectionId == section.Id)
+                            questionNum += questionList.Qnum;
+                    }
+
+                    section.QuestionNum = questionNum;
+                }
+
+                return Ok(responseList);
+            }
+
+            if (test.TestSkill == "listening")
+            {
+                var sections = new List<ListeningSection>();
+                foreach (var sectionId in sectionIds)
+                {
+                    var section = await database.ListeningSections.FindAsync(sectionId);
+                    if (section != null)
+                        sections.Add(section);
+                }
+
+                var responseList = sections.Select(s => Mapper.ListeningSectionToResponseModel(s));
+                var questionLists = await database.QuestionLists.Include(ql => ql.Lsections).ToListAsync();
+
+                foreach (ListeningSectionResponseModel section in responseList)
+                {
+                    int questionNum = 0;
+
+                    foreach (var questionList in questionLists)
+                    {
+                        var questionListSection = questionList.Lsections.FirstOrDefault();
+
+                        if (questionListSection != null && questionListSection.LsectionId == section.Id)
+                            questionNum += questionList.Qnum;
+                    }
+
+                    section.QuestionNum = questionNum;
+                }
+
+                return Ok(responseList);
+            }
+
+            return NoContent();
         }
     }
 }

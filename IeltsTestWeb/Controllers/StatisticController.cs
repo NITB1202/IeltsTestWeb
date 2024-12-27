@@ -1,12 +1,11 @@
 ﻿using IeltsTestWeb.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using IeltsTestWeb.Utils;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("statistic")]
     [ApiController]
     [Produces("application/json")]
     public class StatisticController : ControllerBase
@@ -65,7 +64,7 @@ namespace IeltsTestWeb.Controllers
         /// Get the total number of accounts in the system.
         /// </summary>
         /// <returns></returns>
-        [HttpGet("User")]
+        [HttpGet("user")]
         public async Task<IActionResult> GetUserCount()
         {
             var count = await database.Accounts.CountAsync();
@@ -75,7 +74,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get the total number of tests in the system.
         /// </summary>
-        [HttpGet("Test")]
+        [HttpGet("test")]
         public async Task<IActionResult> GetTestCount()
         {
             var count = await database.Tests.CountAsync();
@@ -85,7 +84,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Determine how many times the test has been completed within a specific time frame.
         /// </summary>
-        [HttpGet("Attend/{time}")]
+        [HttpGet("attend/{time}")]
         public async Task<IActionResult> GetTestTaken(string time, [FromQuery] int? order)
         {
             if (!ValidTimeFrame(time))
@@ -131,7 +130,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Determine how many tests that the user has completed within a specific time frame.
         /// </summary>
-        [HttpGet("User/{id}")]
+        [HttpGet("user/{id}")]
         public async Task<IActionResult> GetUserTestTaken(int id, [FromQuery] string? time, [FromQuery] int? order)
         {
             if (await database.Accounts.FindAsync(id) == null)
@@ -185,7 +184,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Determine how many hours that the user has spent on tests within a specific time frame.
         /// </summary>
-        [HttpGet("Time/{id}")]
+        [HttpGet("time/{id}")]
         public async Task<IActionResult> GetUserTotalTimeSpend(int id, [FromQuery] string? time, [FromQuery] int? order)
         {
             if (await database.Accounts.FindAsync(id) == null)
@@ -251,7 +250,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get user's average band within a specific time frame.
         /// </summary>
-        [HttpGet("Score/{id}")]
+        [HttpGet("score/{id}")]
         public async Task<IActionResult> GetUserAvgScore(int id, [FromQuery] string? time, [FromQuery] int? order)
         {
             if (await database.Accounts.FindAsync(id) == null)
@@ -332,7 +331,7 @@ namespace IeltsTestWeb.Controllers
         /// <summary>
         /// Get user's band map within a specific time frame.
         /// </summary>
-        [HttpGet("Band/{id}")]
+        [HttpGet("band/{id}")]
         public async Task<IActionResult> GetUserBandDiagram(int id, [FromQuery] string? time, [FromQuery] int? order)
         {
             if (await database.Accounts.FindAsync(id) == null)

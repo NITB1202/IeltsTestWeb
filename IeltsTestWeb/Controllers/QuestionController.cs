@@ -2,14 +2,12 @@
 using IeltsTestWeb.RequestModels;
 using IeltsTestWeb.ResponseModels;
 using IeltsTestWeb.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Principal;
 
 namespace IeltsTestWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("question")]
     [ApiController]
     [Produces("application/json")]
     public class QuestionController : ControllerBase
